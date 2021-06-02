@@ -9,7 +9,7 @@ tags: []
 featured_image: 
 ---
 
-From (https://serverfault.com/a/247933)[https://serverfault.com/a/247933 "ServerFault Answer"]
+From [https://serverfault.com/a/247933](https://serverfault.com/a/247933 "ServerFault Answer")
 
 From directory containing the 'latest' backup
 1. Create empty image: `dd if=/dev/null of=archrouter.img bs=4M seek=2048`
@@ -20,5 +20,6 @@ From directory containing the 'latest' backup
 1. Fix permissions (heavy handed, will probably have to tweak some when VM is live
    - `sudo chown -R root:root /mnt/tmp/`
    - `sudo chown -R 1000:1000 /mnt/tmp/home/admin` (since `admin`'s group is 1000)
-1. Convert to qcow2 (to avoid taking up more disk space than necessary; this could be skipped and just create the VM from the .img): **How to do this?**
+1. Convert to qcow2 (to avoid taking up more disk space than necessary; this could be skipped and just create the VM from the .img): `qemu-img convert -O qcow2 /mnt/backup/archrouter.backup/archrouter.img /mnt/backup/archrouter.backup/archrouter.qcow2`
 
+- Somehow, this process took my 1.6G directory and created a 2.3G image.  Something is clearly wrong with the process that I should probably track down.  Note, despite making what I think should be a 2G image with dd, the resulting image after rsync is 8G.  Maybe the problem is somewhere around there.
