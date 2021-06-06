@@ -16,8 +16,10 @@ Arch Linux - rationale: theoretically, rolling updates limit vulnerability windo
 ### OS Installation
 [Arch Linux Installation Guide](https://wiki.archlinux.org/title/Installation_guide "Arch Linux Installation Guide")
 
-- mkfs.fat -F 32 /dev/efi-partition (from [Arch Linux Wiki](https://wiki.archlinux.org/title/FAT "Arch Linux Wiki for FAT")
-- Don't ignore the seemingly minor suggestin that you install a bootloader.  I did't actually miss this, but thought it was weird to not have prominently displayed.  Maybe there's something about the base install that will make everything work, but generally, not having a bootloader seems like very bad things would happen (as in, you wouldn't boot).
+- EFI partition needs to be FAT32 formatted `mkfs.fat -F 32 /dev/efi-partition` (from [Arch Linux Wiki](https://wiki.archlinux.org/title/FAT "Arch Linux Wiki for FAT"))
+- Don't ignore the seemingly minor suggestion that you install a bootloader.  I did't actually miss this, but thought it was weird to not have prominently displayed.  Maybe there's something about the base install that will make everything work, but generally, not having a bootloader seems like very bad things would happen (as in, you wouldn't boot).
+  -- I used GRUB since I'm familiar with it, using the link from the link from the Installation Guide (and targeting [UEFI systems](https://wiki.archlinux.org/title/GRUB#UEFI_systems "GRUB for UEFI Systems"))
+  -- I also install Intel microcode package as suggested and enable via the [GRUB-specific documentation](https://wiki.archlinux.org/title/Microcode#GRUB "Microcode with GRUB") (actually, if you install the intel-ucode package prior to setting up GRUB - e.g., by installing them together via `pacman` - the GRUB setup process will automatically pick it up the first time)
 
 #### Further configuration
 
