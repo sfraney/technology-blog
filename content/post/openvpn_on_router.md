@@ -29,7 +29,7 @@ RUN pacman --noconfirm -Sy mg easy-rsa
 
 In a fun twist, the installed `mg` **requires** glibc_2.33 (`mg: /usr/lib/libc.so.6: version 'GLIBC_2.33' not found (required by mg)`) so I ended up having to perform a system update _in_ the container: `pacman -Syu`.  Since I shouldn't need to invoke pacman again after this, I should be good.  Further, since this is in the ephemeral container (invoked with the `--rm` option, nonetheless) the extra stuff installed will vanish after I'm done with the container.
 
-In order to allow necessary files to persist once this container has performed its task, I passed a volume to it, mapped to my server, where I copied all the CA secret stuff (**I should obviously consider the implications of this and try to mitigate potential security issues** - maybe I'll just encrypt it all with `gpg`).
+In order to allow necessary files to persist once this container has performed its task, I passed a volume to it, mapped to my server, where I copied all the CA secret stuff.  After I was done, I encrypted all the secret information (everything in the `easy-rsa` directory) with `gpg` using a symmetric algorithm (i.e., using a passphrase rather than a keypair that I can lose).
 
 For completeness, the docker run command used was `docker run --rm -it -v /path/to/server/ca/directory:/openvpn-ca easy-rsa:1.0 bash`
 
