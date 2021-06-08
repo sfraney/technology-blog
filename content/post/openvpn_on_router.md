@@ -34,3 +34,7 @@ In order to allow necessary files to persist once this container has performed i
 For completeness, the docker run command used was `docker run --rm -it -v /path/to/server/ca/directory:/openvpn-ca easy-rsa:1.0 bash`
 
 Luckily I copied the `pki` directory to a persistent location because I ran into issues just signing the router's request in the container.  I was able to import it just fine, but encountered a `Easy-RSA error` `Unknown cert type 'server'`.  After trying a few suggestions online, I gave up and got easy-rsa working on my hypervisor machine (using some bootstrap pointers from [here](https://serverascode.com/2017/07/28/easy-rsa.html)) after making the `vars` files identical and copying over `pki`.  I guess I might have been better off just learning how to use easy-rsa in a Debian distro in the first place.
+
+### iptables
+
+[This post](https://arashmilani.com/post?id=53) was probably the most helpful at setting up iptables, but it was ultimately pretty consistent with the [Arch Linux wiki](https://wiki.archlinux.org/title/OpenVPN#iptables "OpenVPN iptables").  It turns out that all lines were necessary from the referenced post _and_ I couldn't connect unless my phone was off the network (i.e., request coming on the WAN interface).  Now that I write it out, that makes sense.  The iptables aren't set up to allow LAN devices to communicate to the router via port 1194.
