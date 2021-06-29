@@ -23,5 +23,10 @@ I need to stage the process though, to keep minimize downtime (since I'd rather 
 - Install hypervisor and new guest on newly-wiped HDD
   - Hypervisor - Ubuntu 20.04?
   - Guest - Arch Linux?
+  - Update router address assignments (actually, it might not really matter when I do this)
+    - Hypervisor will eventually be .201 (when it replaces the server)
+- Setup current hypervisor docker services
+  - Dropbox, Unifi Controller
+  - Anything other than docker that it does that needs to be ported?
 - Setup SSD RAIDZ-1 pool
   - Partially to make sure I get ZFS setup properly before importing existing pool
