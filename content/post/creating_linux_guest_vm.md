@@ -7,10 +7,35 @@ draft: false
 tags: []
 ---
 
+triggering uevents
+
+## Tricky Issues
+
+- Had HDMI plugged into graphics card at startup and saw it get assigned vfio-pci driver (good), but _mostly_ black screen (one big cursor) when VM started up.  If I was patient (probably 5 - 10 minutes), sometimes I would be able to enter my username and it would ask for a password (in big characters).  Thinking I was getting somewhere (even though Live USB shouldn't ask for that stuff), I Ctrl-C'd since I don't wanna put my password into something I don't recognize, and it refreshed to show _my hypervisor's terminal_ (WTF).
+
+Eventually, I happened to go looking for log to figure out my libvirt version to see if disk `type='nvme'` was supported (I was barking up the NVMe tree, thinking it might be a problem that I didn't pass a disk - `--disk none`) and found logs of my VM which showed a bunch of `qemu-system-x86_64: vfio_region_write failed: Device or resource busy` messages.  A quick search online (filtering out "unraid" results via `-unraid` in the search) led me a [mailing list archive](https://listman.redhat.com/archives/vfio-users/2016-March/msg00085.html "[vfio-users] - Device or Resource Busy") that led to my issue.  Like the poster, I had `efifb` glomming onto my graphics card.  Assuming it was because it was plugged in to beging boot, I rebooted with it unplugged and all was well.
+- Adding `video=efifb:off` to `GRUB_CMDLINE_LINUX_DEFAULT` and running `update-grub`, as suggested in the last response in the thread, seems to fix the issue, allowing me to keep the monitor plugged in
+
+- Couldn't install Arch Linux as guest, but Linux Mint worked fine.  I didn't want to settle for Mint when I wanted to switch to Arch and it turned out the problem was a typical one:
+    - After `triggering uevents` the screen seemed to smear with just the bottom tenth or so showing illegible text.  I could tell it was responding to my keystrokes by seeing changes in the smear and the fact that `shutdown -h now` shut the VM down
+    - Needed to disable KMS (Kernel Mode Setting) via `nomodeset` per the [Arch Wiki](https://wiki.archlinux.org/title/Kernel_mode_setting#Disabling_modesetting "Disabling Kernel Mode Setting"), I pressed 'e' at the boot menu and added `nomodeset nouveau.modeset=0` to the line
+
 ## TODO
 
-- Read up on NVMe and USB passthrough for any particulars.  Seems like I got GPU passing through, but don't need at least NVMe passthrough setup, also, before I can make the guest
-- Figure out mapping of physical USB connectors to IOMMU groups
+### Issues
+- ~~~USB hot plug of Keyboard and Mouse don't seem to work~~~
+    - Had to do next step to get it to work
+- ~~~Need to pass Keyboard and Mouse through their controller rather than vendor/product because that requires them to be connected (e.g., not being used by laptop via KVM switch)~~~
+    - Passed through USB controller by PCI address and trial-and-error to see what ports it was associated with
+- Always booting into EFI where I have to manually select the boot drive (`exit` at EFI shell -> Boot Manager or something like that -> select boot drive)
+    - tried several solutions, none stuck
+        - `efibootmgr -o ...` in guest
+        - Boot Manager -> Boot Options -> Change Boot Order (with Commit Changes) in EFI shell
+
+I think these can be done after initial setup of the guest (i.e., can/must modify the resulting XML afterward)
+- Figure out networking
+    -- Note, this is important because default networking will put the PCs behind the KVM router which will make it harder to access them from other machines on the LAN
+- ~~~Fake out the NVIDIA GPU to make it think it's _not_ in a guest (NVIDIA wants you to buy more expensive Quadro parts if you want to do virtualization)~~~
 
 ## Introduction
 
@@ -21,7 +46,7 @@ Consolidated information from a few blogs and the Arch Wiki:
 - [^ref2] [Bryan Steiner](https://github.com/bryansteiner/gpu-passthrough-tutorial "GPU passthrough tutorial")
 - [^ref3] [Mathias Hueber](https://mathiashueber.com/pci-passthrough-ubuntu-2004-virtual-machine/ "Virtual machines with PCI passthrough on Ubuntu 20.04")
 - [^ref4] Arch Linux Wiki: [PCI passthrough via OVMF](https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF "PCI passthrough via OVMF")
-- [^ref5] Ubuntu Wiki: [KVM Installation](https://help.ubuntu.com/community/KVM/Installation "KVM Installation")
+- ~~~[^ref5] Ubuntu Wiki: [KVM Installation](https://help.ubuntu.com/community/KVM/Installation "KVM Installation")~~~
 - [^ref6] A [blog](https://frdmtoplay.com/virtualizing-windows-7-or-linux-on-a-nvme-drive-with-vfio/#builddriveriso) I didn't use, but that may be useful for setting up a Windows guest
 
 ### Setup the system
@@ -71,7 +96,6 @@ Consolidated information from a few blogs and the Arch Wiki:
 
 ### Create the guest
 
-Don't forget: Fake out the NVIDIA GPU to make it think it's _not_ in a guest (NVIDIA wants you to buy more expensive Quadro parts if you want to virtualization)
 - See ["Additional XML Configurations"](https://www.heiko-sieger.info/creating-a-windows-10-vm-on-the-amd-ryzen-9-3900x-using-qemu-4-0-and-vga-passthrough/)
 In "features" block:
 - `<vendor_id state="on" value="0123456789ab"/>`
