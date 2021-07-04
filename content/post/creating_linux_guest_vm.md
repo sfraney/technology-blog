@@ -20,6 +20,8 @@ Eventually, I happened to go looking for log to figure out my libvirt version to
     - After `triggering uevents` the screen seemed to smear with just the bottom tenth or so showing illegible text.  I could tell it was responding to my keystrokes by seeing changes in the smear and the fact that `shutdown -h now` shut the VM down
     - Needed to disable KMS (Kernel Mode Setting) via `nomodeset` per the [Arch Wiki](https://wiki.archlinux.org/title/Kernel_mode_setting#Disabling_modesetting "Disabling Kernel Mode Setting"), I pressed 'e' at the boot menu and added `nomodeset nouveau.modeset=0` to the line
 
+- EFI boot order had EFI shell ahead of the disc and updates (including `efibootmgr` and selection of Boot Manager -> Boot Options -> Change Boot Order with "Commit" changes) didn't stick.  Per [this post](https://forums.unraid.net/topic/91074-ovmf-boot-order-wont-commit-solved/?do=findComment&comment=844968)(despite the fact that UnRaid questions and answers are both very high in search results _and_ very low in success rate), I was able to get it fixed by removing `boot` arguments from the `os` section and marking the discs as `<boot order='1'/>`
+
 ## TODO
 
 ### Issues
@@ -115,3 +117,7 @@ In "features" block:
     - Passthrough - via `host-dev`?
     - How to specify none (like GPU)?  Just omit `--disk`?
 - GPU - `--graphics none`
+
+## Results
+
+After overcoming a couple obstacles, I finally was presented with a GRUB command line at the Arch Linux boot.  After trying a few things, I threw up my hands and just installed a Manjaro guest.  Based on Arch Linux, it will hopefully scratch my itch (e.g., always have cutting edge packages) and I can actually use it.
