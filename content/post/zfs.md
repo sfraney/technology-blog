@@ -23,16 +23,23 @@ Now that I want to migrate my venerable server to my [all-in-one system](ref), I
 - Enable compression (LZ4)
   - `zfs set compression=lz4 <pool>/<dataset>`
 
+- "Set "autoexpand" to on, so you can expand the storage pool automatically after all disks in the pool have been replaced with larger ones. Default is off."
+
+## Process
+
+- Can be done out-of-order **(Link each of these to their appropriate section)**
+  - Create simple pool and dataset for Windows 10 data
+  - Migrate 'temp' pool - will send/receive
+  - Migrate 'tank' pool - will export/import
+
 - Get automated snapshots working
   - Use my own script or ['zfs-auto-snapshot'](zfs-auto-snapshot)?  I initially used zfs-auto-snapshot when it was part of the PPA for ZFS but couldn't find it when I upgraded my system and ZFS was available as a proper package.  I _think_ the one in this repo is the right one and looks pretty straightforward.
 
 - Setup weekly scrub
 
-- "Set "autoexpand" to on, so you can expand the storage pool automatically after all disks in the pool have been replaced with larger ones. Default is off."
-
-- Cache and SLOG
+- Setup cache and SLOG
   - **Actually, I need to think through this:** according to ["best practices and caveats"](https://pthree.org/2012/12/13/zfs-administration-part-viii-zpool-best-practices-and-caveats/ "ZPool Best Practices and Caveats") "Do not share a SLOG or L2ARC DEVICE across pools. Each pool should have its own physical DEVICE, not logical drive, as is the case with some PCI-Express SSD cards. Use the full card for one pool, and a different physical card for another pool. If you share a physical device, you will create race conditions, and could end up with corrupted data."
-  - Is this what I'm suggesting doing? I don't think so.  Assuming cache and SLOG aren't shared across pools _by default_ (which I'm pretty sure they're not; you specify them in creation of - or add them to - a specific pool), I'm not sharing cache and SLOG across 'tank' and 'temp' I'm just putting tank's cache and SLOG on the same disk as temp's data.  I think that's fine.
+    - Is this what I'm suggesting doing? I don't think so.  Assuming cache and SLOG aren't shared across pools _by default_ (which I'm pretty sure they're not; you specify them in creation of - or add them to - a specific pool), I'm not sharing cache and SLOG across 'tank' and 'temp' I'm just putting tank's cache and SLOG on the same disk as temp's data.  I think that's fine.
   - [cache](https://pthree.org/2012/12/07/zfs-administration-part-iv-the-adjustable-replacement-cache/ "The Adjustable Replacement Cache")
     - Create ~16GB partitions on each of the 3 SSDs to be striped as L2ARC
     - `zpool add tank cache /dev/disk/by-id/<first>...-partx /dev/disk/by-id/<second>...-partx /dev/disk/by-id/<third>...-partx`
@@ -42,7 +49,7 @@ Now that I want to migrate my venerable server to my [all-in-one system](ref), I
       - Per [blogger](https://pthree.org/2012/12/07/zfs-administration-part-iv-the-adjustable-replacement-cache/ "ZPool Best Practices and Caveats"), "1 GB is likely sufficient for your SLOG."  It would take _heavy_ workload to exercise even a 1 GB SLOG (it only holds transactions on their way to disk).
     - `zpool add tank log mirror /dev/disk/by-id/<first>...-party /dev/disk/by-id/<second>...-party /dev/disk/by-id/<third>...-party`
 
-## Creating simple pool & dataset for migrating Windows 10 data
+### Creating simple pool & dataset for migrating Windows 10 data
 
 Just gonna create a pool of 1 disk.  I'm mainly just using ZFS to 1) refresh my memory of its use and 2) to leverage its simple SMB sharing properties (IIRC, you just mark a dataset as shared, in whatever way that is done, and then it's available on the network)
 
@@ -57,14 +64,17 @@ Just gonna create a pool of 1 disk.  I'm mainly just using ZFS to 1) refresh my 
   ~~~`zfs share win10/data`~~~ seemingly unnecessary: `cannot share 'win10/data': filesystem already shared`
 - When done `zpool destroy win10`
 
-## Migrating 'temp' pool
+### Migrating 'temp' pool
 
-- Create striped pool of the remaining space on the 3 SSDs to create a new 'temp' pool
+- Create striped pool of the remaining space on the 3 SSDs to create a new 'temp' pool **(link first two bullets to their associated bullet above)**
+  - "Set "autoexpand" to on, so you can expand the storage pool automatically after all disks in the pool have been replaced with larger ones. Default is off."
+  - Enable compression (LZ4)
+    - `zfs set compression=lz4 <pool>/<dataset>`
   - What is the SSD in the server currently doing? I know it's the L2ARC, but is it also the disk that contains root or is that the 1 TB disk?
 - ['Send'](https://pthree.org/2012/12/20/zfs-administration-part-xiii-sending-and-receiving-filesystems/ "Sending and Receiving Filesystems") the temp pool on the old server to this new pool
   - In other words, migrate live data from one pool to another since I'm not just moving drives from one machine to another for this poool like I'm doing with 'tank'
   
-## Migrating 'tank' pool
+### Migrating 'tank' pool
 
 - Export from current server: `zpool export tank`
     - "some pools may refuse to be exported, for whatever reason. You can pass the "-f" switch if needed to force the export"
