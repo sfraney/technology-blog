@@ -1,5 +1,5 @@
 ---
-title: "Creating KVM Guest with GPU Passthrough"
+title: "Creating Linux KVM Guest with GPU Passthrough"
 date: 2021-07-01
 description: ""
 summary: ""
