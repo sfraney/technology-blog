@@ -41,13 +41,15 @@ Now that I want to migrate my venerable server to my [all-in-one system](ref), I
   - **Actually, I need to think through this:** according to ["best practices and caveats"](https://pthree.org/2012/12/13/zfs-administration-part-viii-zpool-best-practices-and-caveats/ "ZPool Best Practices and Caveats") "Do not share a SLOG or L2ARC DEVICE across pools. Each pool should have its own physical DEVICE, not logical drive, as is the case with some PCI-Express SSD cards. Use the full card for one pool, and a different physical card for another pool. If you share a physical device, you will create race conditions, and could end up with corrupted data."
     - Is this what I'm suggesting doing? I don't think so.  Assuming cache and SLOG aren't shared across pools _by default_ (which I'm pretty sure they're not; you specify them in creation of - or add them to - a specific pool), I'm not sharing cache and SLOG across 'tank' and 'temp' I'm just putting tank's cache and SLOG on the same disk as temp's data.  I think that's fine.
   - [cache](https://pthree.org/2012/12/07/zfs-administration-part-iv-the-adjustable-replacement-cache/ "The Adjustable Replacement Cache")
-    - Create ~16GB partitions on each of the 3 SSDs to be striped as L2ARC
-    - `zpool add tank cache /dev/disk/by-id/<first>...-partx /dev/disk/by-id/<second>...-partx /dev/disk/by-id/<third>...-partx`
+    - Create ~16 GB partitions on each of the 3 SSDs to be striped as L2ARC
+    - Create striped VDEV and add it to 'tank' as 'cache': `zpool add tank cache /dev/disk/by-id/<first>...-partx /dev/disk/by-id/<second>...-partx /dev/disk/by-id/<third>...-partx`
+      - Striped means it will be ~48 GB
 
   - [SLOG (ZIL)]()
     - Create ~2 GB partitions on each of the 3 SSDs to be mirrored for SLOG (a subset of which will be ZIL)
       - Per [blogger](https://pthree.org/2012/12/07/zfs-administration-part-iv-the-adjustable-replacement-cache/ "ZPool Best Practices and Caveats"), "1 GB is likely sufficient for your SLOG."  It would take _heavy_ workload to exercise even a 1 GB SLOG (it only holds transactions on their way to disk).
-    - `zpool add tank log mirror /dev/disk/by-id/<first>...-party /dev/disk/by-id/<second>...-party /dev/disk/by-id/<third>...-party`
+    - Create mirrored VDEV and add it to 'tank' as 'log': `zpool add tank log mirror /dev/disk/by-id/<first>...-party /dev/disk/by-id/<second>...-party /dev/disk/by-id/<third>...-party`
+      - Mirror means it will only be ~2 GB
 
 ### Creating simple pool & dataset for migrating Windows 10 data
 
