@@ -10,6 +10,7 @@ tags: []
 ## Misc. Questions (mostly ZFS)
 
 - Would 'zfs send -R ...' send all the sub-datasets (e.g., be >15G)?
+  - `sudo zfs send -Rnv tank@<latest snapshot>` gives promising output (lots of 'send from <snapshot>' with intermediate rollups showing 'full send of <snapshot>' and finally `total estimated size is 1.63T`)
 
 ### Test full backup/restore process on a simple dataset (maybe win10?)
 
