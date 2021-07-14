@@ -44,9 +44,11 @@ Currently learning using Alpine Linux docker container
 
 ## Test Process
 
+**Still need to incorporate verification of recursive datasets and restoration from sequence of incremental backups from outline above (*add link here*)**
+
 - copy a dataset to test pool (currently have 'win10' sitting around)
 - dump identifying statistics for dataset: `find /win10/data -type f -exec sha256sum '{}' \; >> offsite_backup_test.txt`
-- backup dataset copy to AWS (in `bash`)
+- backup dataset copy to AWS (currently bash with `$(` syntax, but could be modified for another shell)
   - `aws configure`
     - Currently have to manually enter credentials 'cause I didn't figure out how to automate it with a quick search
   - `POOL_NAME="win10"`
@@ -58,14 +60,15 @@ Currently learning using Alpine Linux docker container
   - `PASSWORD="<password>"`
   - `sudo zfs send -R $POOL_NAME/$DATASET_NAME@$SNAP_NAME | gpg --yes --batch --passphrase=$PASSWORD -c - | aws s3 cp --expected-size $EXP_SIZE - s3://$BUCKET_NAME/$RECV_FILENAME`
 - verify transfer to S3 on web console (alternatively via aws-cli)
-- destroy local test pool
+- destroy local test pool: `sudo zpool destroy win10`
 - receive locally to get quick feedback on success
   - `POOL_NAME="win10_recv"`
   - `DATASET_NAME="data"`
   - Create new pool: `sudo zpool create $POOL_NAME ata-WDC_WD1600JS-75NCB1_WD-WCANM3331822`
   - `aws s3 cp s3://$BUCKET_NAME/$RECV_FILENAME - | gpg --yes --batch --passphrase=$PASSWORD -d - | sudo zfs receive $POOL_NAME/$DATASET_NAME`
-- verify transfer from S3 to Glacier on web console (alternatively via aws-cli)
-- unthaw Glacier image (i.e., transfer to normal S3), if necessary
+- verify transfer from S3 to Glacier on web console (alternatively via aws-cli): currently have 0 day transfer, so I _think_ it should move after the first midnight (UTC)
+- unthaw Glacier image (i.e., transfer to normal S3), if necessary (i.e., I assume a Glacier image can't be transferred directly)
+  - probably not worth learning programmatically, just use web console
 - 'receive' dataset
   - `POOL_NAME="win10_recv"`
   - `DATASET_NAME="data"`
