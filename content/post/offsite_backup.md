@@ -41,3 +41,34 @@ Currently learning using Alpine Linux docker container
     - Incremental backups for others
     - Would like to know how to skip certain datasets (e.g., zoneminder)
   - **TODO:** figure out proper encryption command
+
+## Test Process
+
+- copy a dataset to test pool (currently have 'win10' sitting around)
+- dump identifying statistics for dataset: `find /win10/data -type f -exec sha256sum '{}' \; >> offsite_backup_test.txt`
+- backup dataset copy to AWS (in `bash`)
+  - `aws configure`
+    - Currently have to manually enter credentials 'cause I didn't figure out how to automate it with a quick search
+  - `POOL_NAME="win10"`
+  - `DATASET_NAME="data"`
+  - `SNAP_NAME="test_backup_snap"`
+  - `EXP_SIZE=$(sudo zfs send -Rnv $POOL_NAME/$DATASET_NAME@$SNAP_NAME | grep "total estimated size is" | perl -nle 'if($_ =~ m/([\d.]+)([KMGT])/){$size=$1;$type=$2;$multiplier=1;if($type eq "K"){$multiplier=1024;}elsif($type eq "M"){$multiplier=1024*1024}elsif($type eq "G"){$multiplier=1024*1024*1024}elsif($type eq "T"){$multiplier=1024*1024*1024*1024}else{print "Unknown multiplier"}print int($multiplier * $size)}')`
+  - `RECV_FILENAME=$POOL_NAME"_"$DATASET_NAME"_"$SNAP_NAME`
+  - `BUCKET_NAME="913048231745bucket"`
+  - `PASSWORD="<password>"`
+  - `sudo zfs send -R $POOL_NAME/$DATASET_NAME@$SNAP_NAME | gpg --yes --batch --passphrase=$PASSWORD -c - | aws s3 cp --expected-size $EXP_SIZE - s3://$BUCKET_NAME/$RECV_FILENAME`
+- verify transfer to S3 on web console (alternatively via aws-cli)
+- destroy local test pool
+- receive locally to get quick feedback on success
+  - `POOL_NAME="win10_recv"`
+  - `DATASET_NAME="data"`
+  - Create new pool: `sudo zpool create $POOL_NAME ata-WDC_WD1600JS-75NCB1_WD-WCANM3331822`
+  - `aws s3 cp s3://$BUCKET_NAME/$RECV_FILENAME - | gpg --yes --batch --passphrase=$PASSWORD -d - | sudo zfs receive $POOL_NAME/$DATASET_NAME`
+- verify transfer from S3 to Glacier on web console (alternatively via aws-cli)
+- unthaw Glacier image (i.e., transfer to normal S3), if necessary
+- 'receive' dataset
+  - `POOL_NAME="win10_recv"`
+  - `DATASET_NAME="data"`
+  - Create new pool: `sudo zpool create $POOL_NAME ata-WDC_WD1600JS-75NCB1_WD-WCANM3331822`
+  - `aws s3 cp s3://$BUCKET_NAME/$RECV_FILENAME - | gpg --yes --batch --passphrase=$PASSWORD -d - | sudo zfs receive $POOL_NAME/$DATASET_NAME`
+- verify receipt against identifying statistics from above
