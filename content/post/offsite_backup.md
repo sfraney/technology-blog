@@ -93,19 +93,5 @@ sudo zfs send -R $PREV_SNAP_NAME $POOL_NAME/$DATASET_NAME@$SNAP_NAME | gpg --yes
 1. modify received dataset (e.g., add/delete/modify some files) and create new snapshot
 
 ### modify steps 4 on to accommodate incremental backup
-1. send incremental backup
-   - **TODO:** learn how to send incremental backup
-      - [this post](https://www.grendelman.net/wp/fast-frequent-incremental-zfs-backups-with-zrep/) has a good, short discussion (I ignored the discussion of `zrep` 'cause I'm not interested in learning a new tool)
-      -	From [Oracle](https://docs.oracle.com/cd/E19253-01/819-5461/gbchx/index.html) `zfs send -I snap1 tank/dana@snap2 > ssh host2 zfs recv newtank/dana` (`-I` ensures "all snapshots between snapA and snapD are sent. If -i is used, only snapD (for all descendents) are sent."
-      - combining original step 4 with incremental send (omitting `aws configure` because it doesn't seem to be necessary after the initial setup):
-   - `POOL_NAME="win10_recv"`
-   - `DATASET_NAME="data"`
-   - `PREV_SNAP_NAME="test_backup_snap"`
-   - `SNAP_NAME="test_backup_incremental_snap"`
-   - `EXP_SIZE=$(sudo zfs send -Rnv -I $PREV_SNAP_NAME $POOL_NAME/$DATASET_NAME@$SNAP_NAME | grep "total estimated size is" | perl -nle 'if($_ =~ m/([\d.]+)([KMGT])/){$size=$1;$type=$2;$multiplier=1;if($type eq "K"){$multiplier=1024;}elsif($type eq "M"){$multiplier=1024*1024}elsif($type eq "G"){$multiplier=1024*1024*1024}elsif($type eq "T"){$multiplier=1024*1024*1024*1024}else{print "Unknown multiplier"}print int($multiplier * $size)}')`
-   - `RECV_FILENAME=$POOL_NAME"_"$DATASET_NAME"_"$SNAP_NAME`
-   - `BUCKET_NAME="913048231745bucket"`
-   - `PASSWORD="<password>"`
-   - `sudo zfs send -R -I $PREV_SNAP_NAME $POOL_NAME/$DATASET_NAME@$SNAP_NAME | gpg --yes --batch --passphrase=$PASSWORD -c - | aws s3 cp --expected-size $EXP_SIZE - s3://$BUCKET_NAME/$RECV_FILENAME`
-1. 
+1. send incremental backup via script above, passing previous backup snapshot name as last argument
    - **TODO:** learn how to recreate dataset from base + incremental backup(s)
