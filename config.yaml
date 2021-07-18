@@ -37,7 +37,7 @@ menu:
 params:
   includeBootstrapJs: false
   showActiveNav: true
-  containerMaxWidth: 2000px
+  containerMaxWidth: 1000px
   dateFormat: Jan 2, 2006
   homeText: A collection of processes and notes related to projects of various technologies
   footerText: Made with [Hugo](https://gohugo.io/) & [Vanilla](https://github.com/zwbetz-gh/vanilla-bootstrap-hugo-theme)
