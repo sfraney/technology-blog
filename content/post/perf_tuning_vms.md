@@ -39,3 +39,16 @@ This felt like more of an ignorant no-brainer.  In other words, it _sounds_ like
 I seem to recall seeing a blogger - or maybe a Red Hat or other OS guide - mention that memballoon is bad and should just be disabled.
 
 **TODO:** figure out what memballoon is and deal with it appropriately
+
+## Networking
+
+This wasn't something I considered until realizing Zoom meetings on the Windows guest get really choppy when the browser is loading pages => maybe the virtualized NIC is having problems.
+
+**TODO:** try to verify that there's a network problem (e.g., speed test)
+  - Got 95% of max download BW and 85% of max upload BW on Linux guest
+    - Notably, this was done during a Zoom meeting on the Windows guest => the issue may not be the network but something about Chrome and Zoom interactions
+      - Further, issues _did_ crop up a few minutes later when the Windows PC opened a new tab => seems very likely that the problem is not specifically network related.  Maybe interrupts or something like that.
+      - [Tweak Zoom settings?](https://www.digitaltrends.com/computing/common-problems-with-zoom-and-how-to-fix-them/)
+      	- "Try unchecking the HD and Touch Up My Appearance options. To access these options, click the cog icon (Settings) on the main screen of the Zoom desktop app, or click the arrow icon within the video camera icon during a call and then select Video Settings on the pop-up menu. After that, select the Video category listed on the left (if it isn’t already selected)."
+
+**TODO:** look into options for improving network performance
