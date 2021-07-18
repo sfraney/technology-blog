@@ -9,7 +9,9 @@ tags: []
 
 ## Misc. Questions (mostly ZFS)
 
-- Would 'zfs send -R ...' send all the sub-datasets (e.g., be >15G)?
+- **How to skip certain datasets** - this is relatively important to avoid sending an extra 110G+ data on initial backup consisting of ZoneMinder data
+  - Not a killer, but would rather not back it up if I can avoid it
+- Would 'zfs send -R ...' send all the sub-datasets (e.g., be >15G)? **Per tests below, yes, this is the flag to use**
   - `sudo zfs send -Rnv tank@<latest snapshot>` gives promising output (lots of 'send from <snapshot>' with intermediate rollups showing 'full send of <snapshot>' and finally `total estimated size is 1.63T`)
 
 ### Test full backup/restore process on a simple dataset (maybe win10?)
@@ -32,18 +34,15 @@ tags: []
 
 Currently learning using Alpine Linux docker container
 
-- Install aws-cli on hypervisor
+- Install `aws-cli` on ZFS system
 - [Setup user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html "Configuration Basics") - `aws configure`
-  - **TODO:** figure out how to provide credentials on CLI for automation
+  - **TODO:** figure out how to provide credentials on CLI for automation **- seems unnecessary since I didn't have to re-enter my credentials after the first part of the tests below, despite performing the test over multiple sessions and days**
 - [Stream data to bucket](https://docs.aws.amazon.com/cli/latest/reference/s3/cp.html#examples "aws s3 cp"): `zfs send <pool>/<dataset>@<snapshot> | <encryption> | aws s3 cp --expected-size $(zfs ) - s3://<bucket_name>/<filename>`
-  - **TODO:** figure out proper send commands
-    - ~~Full backup for first~~
-    - Incremental backups for others
-    - Would like to know how to skip certain datasets (e.g., zoneminder)
+  - **TODO:** figure out how to skip certain datasets (e.g., zoneminder)
 
 ## Test Process
 
-**Still need to incorporate verification of recursive datasets and restoration from sequence of incremental backups from outline above (*add link here*)**
+The following process was followed successfully to verify commands and flow before using on my real pool.
 
 1. copy a dataset to test pool (currently have 'win10' sitting around)
 1. make a snapshot of the dataset: `zfs snapshot -r $POOL_NAME/$DATASET_NAME@$SNAP_NAME`
@@ -94,4 +93,25 @@ sudo zfs send -R $PREV_SNAP_NAME $POOL_NAME/$DATASET_NAME@$SNAP_NAME | gpg --yes
 
 ### modify steps 4 on to accommodate incremental backup
 1. send incremental backup via script above, passing previous backup snapshot name as last argument
-   - **TODO:** learn how to recreate dataset from base + incremental backup(s)
+1. destroy local dataset
+1. restore local dataset
+   1. receive base backup
+      ```
+      POOL_NAME="win10_recv_inc"
+      DATASET_NAME="data"
+      BUCKET_NAME="913048231745bucket"
+      RECV_FILENAME_BASE="win10_data_test_backup_snap"
+      PASSWORD=<password>
+
+      sudo zpool create $POOL_NAME ata-WDC_WD1600JS-75NCB1_WD-WCANM3331822
+      aws s3 cp s3://$BUCKET_NAME/$RECV_FILENAME_BASE - | gpg --yes --batch --passphrase=$PASSWORD -d - | sudo zfs receive $POOL_NAME/$DATASET_NAME
+      ```
+   1. verify receipt of base: `find /$POOL_NAME/$DATASET_NAME -type f -exec sha256sum '{}' \; >> offsite_backup_base_recv_test.txt`
+   1. receive each(?) incremental backup, in order, using `-F` flag to avoid having to "rollback" the receiving system, [per Oracle](https://docs.oracle.com/cd/E19253-01/819-5461/gbimy/index.html) (I don't know why, if all I've done is receive and not modified, that this is necessary, but it appears to be as evidenced by doing this test and having the incremental receipt fail on "cannot receive: destination has been modified since most recent snapshot" error)
+      ```
+      RECV_FILENAME_INC="win10_recv_data_test_backup_incremental_snap"
+
+      aws s3 cp s3://$BUCKET_NAME/$RECV_FILENAME_INC - | gpg --yes --batch --passphrase=$PASSWORD -d - | sudo zfs receive -F $POOL_NAME/$DATASET_NAME
+      ```
+      1. verify receipt of each, in order: `find /$POOL_NAME/$DATASET_NAME -type f -exec sha256sum '{}' \; >> offsite_backup_incremental_recv_test.txt`
+      - might just be a normal receive of each, in order
