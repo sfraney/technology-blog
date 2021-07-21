@@ -68,6 +68,7 @@ Just gonna create a pool of 1 disk.  I'm mainly just using ZFS to 1) refresh my 
 
 ### Migrating 'temp' pool
 
+- Copy contents of SSDs to safe location (e.g., /tank/backup)
 - Create striped pool of the remaining space on the 3 SSDs to create a new 'temp' pool **(link first two bullets to their associated bullet above)**
   - "Set "autoexpand" to on, so you can expand the storage pool automatically after all disks in the pool have been replaced with larger ones. Default is off."
   - Enable compression (LZ4)
