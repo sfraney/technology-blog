@@ -11,6 +11,8 @@ tags: []
 
 - **How to skip certain datasets** - this is relatively important to avoid sending an extra 110G+ data on initial backup consisting of ZoneMinder data
   - Not a killer, but would rather not back it up if I can avoid it
+  - **Just backup datasets independently** (e.g., tank/data/sean, tank/media/pictures) => could skip the zoneminder set)
+    - This also allows for recovering individual datasets (and maybe restructuring a pool's dataset hierarchy)
 - Would 'zfs send -R ...' send all the sub-datasets (e.g., be >15G)? **Per tests below, yes, this is the flag to use**
   - `sudo zfs send -Rnv tank@<latest snapshot>` gives promising output (lots of 'send from <snapshot>' with intermediate rollups showing 'full send of <snapshot>' and finally `total estimated size is 1.63T`)
 
