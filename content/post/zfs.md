@@ -28,14 +28,14 @@ Now that I want to migrate my venerable server to my [all-in-one system](ref), I
 ## Process
 
 - Can be done out-of-order **(Link each of these to their appropriate section)**
-  - Create simple pool and dataset for Windows 10 data
+  - ~~Create simple pool and dataset for Windows 10 data~~
   - Migrate 'temp' pool - will send/receive
-  - Migrate 'tank' pool - will export/import
+  - ~~Migrate 'tank' pool - will export/import~~
 
-- Get automated snapshots working
-  - Use my own script or ['zfs-auto-snapshot'](zfs-auto-snapshot)?  I initially used zfs-auto-snapshot when it was part of the PPA for ZFS but couldn't find it when I upgraded my system and ZFS was available as a proper package.  I _think_ the one in this repo is the right one and looks pretty straightforward.
+- ~~Get automated snapshots working~~
+  - ~~Use my own script or ['zfs-auto-snapshot'](zfs-auto-snapshot)?  I initially used zfs-auto-snapshot when it was part of the PPA for ZFS but couldn't find it when I upgraded my system and ZFS was available as a proper package.  I _think_ the one in this repo is the right one and looks pretty straightforward.~~
 
-- Setup weekly scrub
+- ~~Setup weekly scrub~~
 
 - Setup cache and SLOG
   - **Actually, I need to think through this:** according to ["best practices and caveats"](https://pthree.org/2012/12/13/zfs-administration-part-viii-zpool-best-practices-and-caveats/ "ZPool Best Practices and Caveats") "Do not share a SLOG or L2ARC DEVICE across pools. Each pool should have its own physical DEVICE, not logical drive, as is the case with some PCI-Express SSD cards. Use the full card for one pool, and a different physical card for another pool. If you share a physical device, you will create race conditions, and could end up with corrupted data."
@@ -62,8 +62,8 @@ Just gonna create a pool of 1 disk.  I'm mainly just using ZFS to 1) refresh my 
     - `sudo apt-get install samba`
     - `sudo smbpasswd -a $USER`
 - [Share the dataset](https://wiki.debian.org/ZFS#CIFS_shares "ZFS CIFS shares"):
-  `zfs set sharesmb=on win10/data`
-  ~~~`zfs share win10/data`~~~ seemingly unnecessary: `cannot share 'win10/data': filesystem already shared`
+  - `zfs set sharesmb=on win10/data`
+  - ~~`zfs share win10/data`~~ seemingly unnecessary: `cannot share 'win10/data': filesystem already shared`
 - When done `zpool destroy win10`
 
 ### Migrating 'temp' pool
@@ -74,8 +74,9 @@ Just gonna create a pool of 1 disk.  I'm mainly just using ZFS to 1) refresh my 
   - Enable compression (LZ4)
     - `zfs set compression=lz4 <pool>/<dataset>`
   - What is the SSD in the server currently doing? I know it's the L2ARC, but is it also the disk that contains root or is that the 1 TB disk?
-- ['Send'](https://pthree.org/2012/12/20/zfs-administration-part-xiii-sending-and-receiving-filesystems/ "Sending and Receiving Filesystems") the temp pool on the old server to this new pool
-  - In other words, migrate live data from one pool to another since I'm not just moving drives from one machine to another for this poool like I'm doing with 'tank'
+- This requires moving the SSD to the new tower and performing the send before moving the 'temp' disk to the new tower => annoying, if not impossible (e.g., can't move the SSD w/o breaking 'temp' dataset: ~~['Send'](https://pthree.org/2012/12/20/zfs-administration-part-xiii-sending-and-receiving-filesystems/ "Sending and Receiving Filesystems") the temp pool on the old server to this new pool~~
+  - ~~In other words, migrate live data from one pool to another since I'm not just moving drives from one machine to another for this poool like I'm doing with 'tank'~~
+- `import` 'temp' into new system & send it live on the system (I assume this is possible) - unfortunately, I forgot to `export` so it won't be as clean as I'd like (have to `-f`orce it)
   
 ### Migrating 'tank' pool
 
