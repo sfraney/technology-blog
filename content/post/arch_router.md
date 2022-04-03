@@ -66,8 +66,9 @@ The following sections relied heavily on the following sources along with a vari
   ```/etc/systemd/network/15-bridge.netdev
   [NetDev]
   Name=br0
-  Kind=bridge```
-     --- Set MACAddress? `MACAddress=xx:xx:xx:xx:xx:xx`
+  Kind=bridge
+  ```
+     - Set MACAddress? `MACAddress=xx:xx:xx:xx:xx:xx`
   1. Restart systemd-networkd to create bridge
   1. Bind bridge to network interface(s)
   ```/etc/systemd/network/16-bound.network
@@ -75,7 +76,8 @@ The following sections relied heavily on the following sources along with a vari
   Name=enlan*
 
   [Network]
-  Bridge=br0```
+  Bridge=br0
+  ```
   **Make sure any interface does _not_ have DHCP or static IP address assigned** (i.e., "modify the corresponding `/etc/systemd/network/<iface>.network` accordingly to remove the addressing")**
   Most easy to do by just repurposing the existing 21-lan.network for the next step
   1. Configure IP & DNS for the bridge (probably will match one of the interfaces that had it's addressing removed in the previous step)
@@ -84,7 +86,8 @@ The following sections relied heavily on the following sources along with a vari
   Name=br0
 
   [Network]
-  Address=172.16.0.1/24```
+  Address=172.16.0.1/24
+  ```
   (Note, I removed the `DNS` and `Gateway` portions from the wiki.  Hopefully they're not needed because they seem to be problematic since the bridge is the one that will handle both...)
 
 - Update iptables rules to forward traffic between WAN and new bridge rather than any existing single interface
