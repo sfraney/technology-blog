@@ -22,4 +22,21 @@ From [Oracle](https://docs.oracle.com/cd/E19253-01/819-5461/gazgd/index.html) an
    1. I bought WD80EAAZ drives, so I expect the ID to be something like ata-*WD80EAAZ*
 1. My tank zpool seems to already have the `autoexpand` property on, so once all drives are replaced, the size should grow to the full RAIDZ capacity of 3x8TB (~16 TB).
 
+## Problem
+
+I received the following error when I tried to run `sudo zpool replace tank ata-WDC_WD10EADS... ata-WDC_WD80EAAZ...` after adding one of the new disks:
+
+`cannot replace ata-WDC_WD10EADS... with ata-WDC_WD80EAAZ...: new device has a different optimal sector size; use the option '-o ashift=N' to override the optimal size`
+
+My original drives have sector sizes of 512 bytes. This apparently led to the pool being created with ashift of 9 (log~2~(512)). The new drives have sector size of 4096 bytes. By adding them to the existing zpool, I will need to make them use ashift of 9 rather than their default of 12 (via `-o ashift=9` to the `replace` commmand, I imagine). This sounds very bad.
+
+I think I'll go back to my initial plan of recovering from backup. The minor problem is that the pool name may have to be different. This will change mount points and such. I know that mapped drives on other machines will have to change their names. That's not a big deal, but I'm worried about what else might need to be changed that I'm not aware of.
+
+References:
+
+- https://github.com/openzfs/zfs/issues/6975
+- https://github.com/openzfs/zfs/pull/2427#issuecomment-321887912
+- https://askubuntu.com/q/1102315
+- https://unix.stackexchange.com/q/90121
+
 [^green]: I'm curious what happened with the Green drives
