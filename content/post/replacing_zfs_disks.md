@@ -39,4 +39,20 @@ References:
 - https://askubuntu.com/q/1102315
 - https://unix.stackexchange.com/q/90121
 
+## Try #2
+
+I will try to run a manual backup of my current pool utilizing some info from my [Offsite Backup post]({{< ref "offsite_backup" >}}). I will then create a new pool with the new drives and recover the data from the offsite backup.
+
+*I NEED TO REVIEW MY OFFSITE BACKUP PROCESS TO REMEMBER HOW TO RECOVER*
+
+1. I think today (7/8/2024) is coincidentally the day that my monthly backup will happen at 6 PM => wait until that completes.
+1. Export the current pool, changing its name if possible `zpool export tank <new name>`
+   1. The [Oracle documentation](https://docs.oracle.com/en/operating-systems/solaris/oracle-solaris/11.4/manage-zfs/importing-zfs-storage-pools.html) says "You can only change the name of a pool while *exporting* and importing the pool..." (emphasis mine), but I don't see any option to `export` to change the name, so I might have to export, then import with a new name just to change the name.
+1. If I had to do export/import in the sub-bullet above, I may have to destroy the existing "tank" pool.
+1. Physically replace old drives with new drives
+1. Create new "tank" pool with new drives
+1. Import backed up data from AWS:
+   1. Unfreeze old sets
+   1. `zfs receive` them in chronological order
+
 [^green]: I'm curious what happened with the Green drives
