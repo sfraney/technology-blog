@@ -15,12 +15,12 @@ My commercial router had VPN capability (via OpenVPN and another option I forget
 
 The [Arch Linux Wiki](https://wiki.archlinux.org/title/OpenVPN "OpenVPN Arch Wiki") was the best source for the nuts-and-bolts of this process, but I also found the [OpenVPN documentation](https://openvpn.net/community-resources/how-to/#setting-up-your-own-certificate-authority-ca-and-generating-certificates-and-keys-for-an-openvpn-server-and-multiple-clients "OpenVPN How To") itself to be good for background and corroboration.
 
-1. Decrypt OpenVPN_CA tarball from backups: `gpg -d -o /tmp/OpenVPN_CA.tgz /path/to/OpenVPN_CA.tgz`
+1. Decrypt OpenVPN_CA tarball from backups: `gpg -d -o /tmp/OpenVPN_CA.tgz /path/to/OpenVPN_CA.tgz.gpg`
 1. Deflate tarball: `pushd /tmp && tar -xvf OpenVPN_CA.tgz`
 1. (if not already present) Create docker image: `pushd /path/to/directory-containing-easy-rsa-Dockerfile docker build -t easy-rsa .`
 1. (optional) Tag image as newest version: `docker tag easy-rsa easy-rsa:<latest version number +1>`
    1. From https://medium.com/@mccode/the-misunderstood-docker-tag-latest-af3babfd6375
-1. Launch docker container: `docker run --rm -it -v /tmp/OpenVPN_CA:/openvpn-ca -v /home/sean/docker/easy-rsa/ovpngen/:/scripts easy-rsa:latest bash`
+1. Launch docker container: `docker run --rm -it -v /tmp/OpenVPN_CA:/openvpn-ca -v /path/to/directory-containing-easy-rsa-Dockerfile/ovpngen/:/scripts easy-rsa:latest bash`
 1. Generate the client key and certificate:
    1. `pushd /openvpn-ca/easy-rsa`
    1. Fulfill equirements for generating proper keys using ecliptic curves (per OpenVPN client file generation [instructions](https://wiki.archlinux.org/title/Easy-RSA#OpenVPN_client_files)
