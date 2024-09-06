@@ -42,7 +42,7 @@ The [Arch Linux Wiki](https://wiki.archlinux.org/title/OpenVPN "OpenVPN Arch Wik
    1. (Either on RaspberryPi or on container host) Make ovpn consistent with server expectations
       1. Add `redirect-gateway def1 bypass-dhcp`
       1. Uncomment `cipher AES-256-CBC` and `auth SHA-512` lines
-      1. Replace '<tls-auth>' with '<tls-crypt>' in /tmp/<client-name>.ovpn
+      1. Replace '\<tls-auth\>' with '\<tls-crypt\>' in /tmp/<client-name>.ovpn
    1. (On container host) `scp /tmp/<client-name>.ovpn <raspberrypi>:/home/pi`
 1. **At this point, the generated .ovpn file and an old .ovpn file that I know works, differ => might have some more issues.** Need to test new file to see if it works.
    - In particular, the new certificate is 2048-bit rsaEncryption rather than 521-bit id-ecPublicKey.  This might be due to incorrect arguments when generating the client request (`easyrsa gen-req...` above)
