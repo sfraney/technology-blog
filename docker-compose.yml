@@ -1,0 +1,17 @@
+services:
+  hugo-dev:
+    image: klakegg/hugo:ext-alpine
+    container_name: technology-blog-dev
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "1314:1313"
+    command: server --bind 0.0.0.0 --baseURL=http://localhost:1314/ --disableFastRender
+    environment:
+      - TZ=America/Los_Angeles
+      - HUGO_ENV=development
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3" 
