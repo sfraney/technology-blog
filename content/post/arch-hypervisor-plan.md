@@ -77,6 +77,29 @@ lsblk -f
 - What's in the 37GB on 'temp' pool?
 - What's the exact layout of the 1TB temp pool drive?
 
+**Answers from census:**
+
+- **OS drive**: `sdb` (372.6GB Hitachi HDT72504) - Contains `/boot/efi` (512M), `/boot` (1G ext4), and root filesystem (185.6G ext4 on LVM volume `ubuntu--vg-ubuntu--lv`)
+
+- **3x250GB SSDs** (`sda`, `sdc`, `sdd` - Samsung SSD 850/840, 238.5GB each):
+  - Each drive has 3 partitions:
+    - `part1`: 16G (Linux filesystem, not clearly identified)
+    - `part2`: 2G zfs_member labeled "tank" (not currently used as L2ARC/SLOG - tank pool only shows the 3x8TB drives)
+    - `part3`: 220.5G zfs_member labeled "downloads"
+  - The `part3` partitions form a striped "downloads" zpool (660G total, 621G used, 94% capacity)
+  - **Not** used as L2ARC/SLOG for 'tank' pool
+  - **Are** part of the "downloads" zpool (striped across all three SSDs)
+
+- **Temp pool contents**: 36.5GB used out of 904GB total (4% capacity). Pool is in DEGRADED state with 1 data error from a scrub in December 2023. The drive (`sdh3`) shows "too many errors" in the zpool status.
+
+- **1TB temp pool drive layout** (`sdh` - WDC WD10EZEX-00K, 931.5GB):
+  - `sdh1`: 22.4GB ext4 (not mounted, old OS partition - **Ubuntu 12.04.3 LTS (Precise Pangolin)**)
+  - `sdh2`: 1KB (extended partition)
+  - `sdh3`: 905.2GB zfs_member (temp pool - DEGRADED, lightly used)
+  - `sdh5`: 4GB swap partition
+  
+  **Conclusion**: The 1TB drive (`sdh`) was previously used as an OS disk (Ubuntu 12.04.3 LTS from 2012 on `sdh1`) and now contains a lightly-used, degraded ZFS dataset on `sdh3`. Once the temp pool data is backed up, this drive can be fully repurposed for the new Arch Linux installation.
+
 ### Network Configuration
 
 Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-network-config.txt`.
@@ -429,6 +452,7 @@ Once everything is tested and validated:
 - Previous blog posts on this system:
   - [Initial Ryzen Setup]({{< ref "initial_ryzen_steps" >}})
   - [ZFS Configuration]({{< ref "zfs" >}})
-  - [VM Creation]({{< ref "creating_windows_guest_vm" >}}, {{< ref "creating_linux_guest_vm" >}})
+  - [Windows VM Creation]({{< ref "creating_windows_guest_vm" >}})
+  - [Linux VM Creation]({{< ref "creating_linux_guest_vm" >}})
   - [Performance Tuning]({{< ref "perf_tuning_vms" >}})
   - [Offsite Backup]({{< ref "offsite_backup" >}})
