@@ -1,0 +1,434 @@
+---
+title: "Arch Hypervisor Plan"
+date: 2025-12-06
+description: "Upgrading my system to a rolling release"
+summary: ""
+draft: false
+tags: []
+---
+
+It has been 4 1/2 years since I first setup my 2-desktops-in-1 hybrid hypervisor/home-server system. I used the most recent Ubuntu LTS at the time - 20.04 - and it is now no longer supported. This has taught me that I need something that can last longer than LTS provides and I have become more comfortable with Arch Linux in the last 4+ years, so I'm going to update to an Arch Linux system.
+
+The challenge is that this system hosts a lot and I don't want anything to slip through the cracks. My strategy is to use the existing 1TB 'temp' ZFS pool drive (which only has 37GB used) for a side-by-side Arch installation, allowing me to develop the new system while the old one is still available in a dual boot configuration.
+
+## System Overview
+
+### Hardware
+- **CPU**: Ryzen 9 5950x
+- **GPUs**: 1x NVIDIA 3070, 1x AMD XFX Radeon HD 6950 (for VM passthrough - mixed vendors to avoid GRUB blacklisting issues)
+- **NVMe drives**: 2x (both for VM passthrough - motherboard only supports 2)
+- **OS drive**: 372.6 GB (or possibly one of the 3x250GB drives - needs verification)
+- **ZFS pools**: 
+  - `tank`: 3x8TB RAIDZ
+  - `temp`: 1TB (only 37GB used - candidate for Arch installation)
+- **SSDs**: 3x250GB (need to determine current use - possibly L2ARC/SLOG for tank pool, or download zpool)
+
+### Current Services
+- **Docker containers**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge
+- **Virtualization**: 2x KVM VMs with GPU passthrough (Windows + Linux)
+- **Storage**: ZFS auto-snapshots, AWS Glacier backups
+- **Network**: Bridge networking, hostname: hypervisor.local
+
+### Key Considerations
+- No CPU pinning or huge pages currently configured
+- No regular full system backup (needs to be implemented)
+- IOMMU/VFIO configuration must be preserved (mixed GPU vendors avoid GRUB blacklisting issues)
+- All services must continue functioning
+
+## Phase 1: System Census
+
+Before making any changes, I need a complete inventory of the current system. This will ensure nothing is missed during migration. All census output will be saved to `static/census/arch-hypervisor-migration/` in the blog repository for reference, with files named by date and category.
+
+### Storage Inventory
+
+Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-storage-inventory.txt`.
+
+```bash
+# List all block devices
+lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE,UUID
+
+# ZFS pool status (all pools)
+zpool status
+zpool status -v
+
+# Detailed ZFS pool information including cache/SLOG
+zpool status tank
+zpool list -v
+
+# Filesystem usage
+df -h
+df -hT
+
+# Mount points
+mount | sort
+cat /etc/fstab
+
+# Disk partitions
+sudo fdisk -l
+lsblk -f
+```
+
+**Key questions to answer:**
+- Which drive is the OS drive? (372.6GB or one of the 3x250GB?)
+- What are the 3x250GB SSDs currently doing?
+  - Are they L2ARC/SLOG for 'tank' pool?
+  - Are they part of a download zpool?
+  - Are they unused?
+- What's in the 37GB on 'temp' pool?
+- What's the exact layout of the 1TB temp pool drive?
+
+### Network Configuration
+
+Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-network-config.txt`.
+
+```bash
+# Network interfaces
+ip addr show
+# or
+ifconfig -a
+
+# Network configuration files
+ls -la /etc/netplan/
+cat /etc/netplan/*.yaml
+# or
+cat /etc/network/interfaces
+
+# Bridge configuration
+brctl show
+ip link show type bridge
+
+# Firewall rules
+sudo ufw status verbose
+# or
+sudo iptables -L -v -n
+sudo iptables -t nat -L -v -n
+
+# Routing
+ip route show
+```
+
+### Services Inventory
+
+Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-services-inventory.txt`.
+
+```bash
+# Systemd services
+systemctl list-units --type=service --state=running
+systemctl list-units --type=service --state=enabled
+systemctl list-units --type=timer --state=running
+
+# Docker containers
+docker ps -a
+docker images
+docker volume ls
+
+# Docker directory structure
+ls -laR /home/sean/docker/
+
+# Cron jobs
+crontab -l
+sudo crontab -l
+ls -la /etc/cron.*
+cat /etc/crontab
+```
+
+### VM Configuration
+
+VM XML exports will be saved to `/tank/backup/vm-<vm-name>.xml`. Other VM configuration output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-vm-config.txt`.
+
+```bash
+# List all VMs
+virsh list --all
+
+# Export VM XML configurations
+virsh dumpxml <vm-name> > /tank/backup/vm-<vm-name>.xml
+
+# IOMMU groups
+for d in /sys/kernel/iommu_groups/*/devices/*; do
+    n=${d#*/iommu_groups/*}; n=${n%%/*}
+    printf 'IOMMU Group %s ' "$n"
+    lspci -nns "${d##*/}"
+done
+
+# PCI devices
+lspci -nn
+
+# GPU information (critical for VFIO configuration)
+lspci -nn | grep -i vga
+lspci -nn | grep -i "3d\|display"
+# Get full GPU details including audio devices
+lspci -nn | grep -E "(NVIDIA|AMD|Radeon)"
+```
+
+### System Configuration
+
+Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-system-config.txt`.
+
+```bash
+# Boot configuration
+cat /etc/default/grub
+cat /boot/grub/grub.cfg | head -50
+
+# Installed packages
+dpkg --get-selections | grep -v deinstall > /tank/backup/ubuntu-packages.txt
+
+# User accounts
+cat /etc/passwd
+cat /etc/group
+id
+
+# SSH configuration
+cat ~/.ssh/config
+cat ~/.ssh/authorized_keys
+ls -la ~/.ssh/
+```
+
+### Backup and Automation Scripts
+
+Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-backup-scripts.txt`.
+
+```bash
+# Find backup scripts
+find /home -name "*backup*" -type f
+find /usr/local/bin -name "*backup*" -type f
+find /etc -name "*backup*" -type f
+
+# ZFS snapshot automation
+systemctl list-timers | grep -i snap
+grep -r "zfs.*snap" /etc/cron.*
+grep -r "zfs.*snap" /home/*/bin
+
+# AWS backup scripts
+grep -r "aws.*s3" /home
+grep -r "glacier" /home
+```
+
+### Temp Pool Contents
+
+Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-temp-pool-contents.txt`.
+
+```bash
+# What's in the temp pool?
+zfs list temp
+du -sh /temp/*
+find /temp -type f -exec ls -lh {} \; | head -20
+zfs get all temp
+```
+
+## Phase 2: Full System Backup
+
+Before making any changes, create a complete backup of the system to `/tank/backup`. This should become a regular automated process on the new system.
+
+### Backup Contents
+
+- System configuration files (`/etc/`)
+- User home directories
+- Docker data volumes and configurations
+- VM XML definitions (already exported in Phase 1)
+- Package lists
+- Service configurations
+- SSH keys and authorized_keys
+- Any custom scripts
+
+### Backup Process
+
+```bash
+# Create backup directory with timestamp
+BACKUP_DIR="/tank/backup/system-backup-$(date +%Y%m%d)"
+mkdir -p "$BACKUP_DIR"
+
+# System configuration
+sudo tar -czf "$BACKUP_DIR/etc-backup.tar.gz" /etc/
+
+# Home directories
+sudo tar -czf "$BACKUP_DIR/home-backup.tar.gz" /home/
+
+# Docker volumes and configs
+docker ps -a --format "{{.Names}}" > "$BACKUP_DIR/docker-containers.txt"
+docker images > "$BACKUP_DIR/docker-images.txt"
+sudo tar -czf "$BACKUP_DIR/docker-volumes.tar.gz" /var/lib/docker/volumes/
+
+# Package list (already done in Phase 1, but verify)
+cp /tank/backup/ubuntu-packages.txt "$BACKUP_DIR/"
+
+# VM XMLs (already exported in Phase 1)
+cp /tank/backup/vm-*.xml "$BACKUP_DIR/" 2>/dev/null || true
+
+# Custom scripts
+find /home -name "*.sh" -o -name "*.py" | xargs tar -czf "$BACKUP_DIR/scripts.tar.gz"
+
+# Verify backup
+ls -lh "$BACKUP_DIR"
+```
+
+## Phase 3: Temp Pool Data Migration
+
+Before repurposing the 1TB temp pool drive, migrate its contents.
+
+### Identify and Migrate Temp Pool Data
+
+```bash
+# Review what's in temp pool
+zfs list -r temp
+du -sh /temp/*
+
+# Migrate to appropriate location (likely /tank/backup or /tank/temp-migrated)
+# Adjust based on what's actually there
+sudo rsync -av /temp/ /tank/backup/temp-migration/
+
+# Verify migration
+diff -r /temp/ /tank/backup/temp-migration/
+
+# Export temp pool
+sudo zpool export temp
+
+# Verify drive is free
+lsblk
+```
+
+## Phase 4: Partitioning Strategy for 1TB Drive
+
+The 1TB drive needs to be partitioned optimally:
+- **OS partition**: 100-150GB for Arch Linux (plenty of room for growth)
+- **Remaining space**: ~850GB to be determined based on needs
+  - Option 1: Additional ZFS pool for fast storage
+  - Option 2: Extended temp/download space
+  - Option 3: Swap partition (if needed)
+  - Option 4: Reserved for future use
+
+### Partition Layout (to be finalized)
+
+```
+/dev/sdX1: 150GB - Arch Linux OS (ext4 or btrfs)
+/dev/sdX2: 850GB - TBD (possibly new ZFS pool or extended temp space)
+```
+
+## Phase 5: Side-by-Side Arch Installation
+
+Install Arch Linux on the 1TB drive while keeping Ubuntu 20.04 fully functional.
+
+### Preparation
+
+- Create bootable Arch USB
+- Boot from USB
+- Partition 1TB drive according to Phase 4 plan
+- Install Arch Linux base system
+- Configure dual boot (GRUB or systemd-boot)
+
+### Arch Base System Setup
+
+- Install base packages
+- Configure ZFS support (`zfs-dkms` or `zfs-linux`)
+- Set up network configuration
+- Create user accounts
+- Configure SSH access
+- Import existing ZFS pools (read-only initially for safety)
+
+## Phase 6: Service Migration
+
+Migrate services one at a time, testing each before moving to the next.
+
+### Docker and Containers
+
+- Install Docker on Arch
+- Restore Docker volumes from backup
+- Configure containers (Jellyfin, Sonarr, Radarr, HomeAssistant, Deluge)
+- Test each service
+- Verify port mappings and network access
+
+### Virtualization Setup
+
+- Install KVM/QEMU/libvirt packages
+- Configure IOMMU/VFIO (same kernel parameters as Ubuntu)
+- **Important**: Mixed GPU vendors (NVIDIA + AMD) avoid GRUB blacklisting issues that occur with same-vendor GPUs
+- Import VM XML definitions
+- Test GPU passthrough on both VMs
+- Verify VM networking and performance
+- **Note**: No CPU pinning or huge pages unless performance testing shows they're needed
+
+### ZFS Automation
+
+- Set up ZFS auto-snapshots (systemd timer or cron)
+- Configure weekly scrubs
+- Verify snapshot retention policies
+
+### AWS Glacier Backups
+
+- Install aws-cli
+- Restore backup scripts
+- Test backup process
+- Verify encryption and Glacier transition
+
+## Phase 7: Automated Full System Backup Setup
+
+Implement regular automated full system backups to `/tank/backup`.
+
+### Backup Script
+
+Create a script that:
+- Backs up `/etc/`, `/home/`, Docker volumes, VM configs
+- Uses timestamped directories
+- Implements retention policy (e.g., keep last 4 weekly backups)
+- Logs backup status
+- Sends notifications on failure
+
+### Automation
+
+- Set up systemd timer for weekly backups
+- Or use cron for scheduled backups
+- Document retention and cleanup procedures
+
+## Phase 8: Testing and Validation
+
+Thoroughly test the new system before cutover.
+
+### Service Testing
+
+- Verify all Docker containers are running and accessible
+- Test VM performance and GPU passthrough
+- Verify ZFS pools are functioning correctly
+- Test network connectivity and bridge networking
+- Verify all services are accessible at their expected URLs
+
+### Backup Testing
+
+- Test ZFS snapshot automation
+- Test AWS Glacier backup process
+- Test full system backup script
+- Verify backup restoration process
+
+### Performance Validation
+
+- Compare VM performance to Ubuntu system
+- Monitor system resources
+- Verify no regressions
+
+## Phase 9: Cutover
+
+Once everything is tested and validated:
+
+1. Final data sync if needed
+2. Update boot order to default to Arch
+3. Keep Ubuntu 20.04 as fallback option
+4. Monitor system for a period before considering Ubuntu removal
+
+## Post-Migration Tasks
+
+- Document any differences from Ubuntu setup
+- Update any documentation with Arch-specific notes
+- Set up monitoring/alerting for critical services
+- Schedule regular review of backup logs
+- Consider removing Ubuntu partition after extended successful operation
+
+## Lessons Learned
+
+(To be filled in after migration)
+
+## References
+
+- Previous blog posts on this system:
+  - [Initial Ryzen Setup]({{< ref "initial_ryzen_steps" >}})
+  - [ZFS Configuration]({{< ref "zfs" >}})
+  - [VM Creation]({{< ref "creating_windows_guest_vm" >}}, {{< ref "creating_linux_guest_vm" >}})
+  - [Performance Tuning]({{< ref "perf_tuning_vms" >}})
+  - [Offsite Backup]({{< ref "offsite_backup" >}})
