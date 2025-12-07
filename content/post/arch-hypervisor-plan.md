@@ -25,8 +25,8 @@ The challenge is that this system hosts a lot and I don't want anything to slip 
 
 ### Current Services
 - **Docker containers**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge
-- **Virtualization**: 2x KVM VMs with GPU passthrough (Windows + Linux)
-- **Storage**: ZFS auto-snapshots, AWS Glacier backups
+- **Virtualization**: 2x KVM VMs with GPU passthrough ([Windows]({{< ref "creating_windows_guest_vm" >}}) + [Linux]({{< ref "creating_linux_guest_vm" >}}))
+- **Storage**: ZFS auto-snapshots, [AWS Glacier backups]({{< ref "offsite_backup" >}})
 - **Network**: Bridge networking, hostname: hypervisor.local
 
 ### Key Considerations
@@ -158,7 +158,7 @@ docker images
 docker volume ls
 
 # Docker directory structure
-ls -laR /home/sean/docker/
+ls -laR $HOME/docker/
 
 # Cron jobs
 crontab -l
@@ -198,6 +198,8 @@ lspci -nn | grep -E "(NVIDIA|AMD|Radeon)"
 ### System Configuration
 
 Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-system-config.txt`.
+
+TODO: why are we limiting the `grub.cfg` output to 50 lines?
 
 ```bash
 # Boot configuration
@@ -252,6 +254,8 @@ zfs get all temp
 
 ## Phase 2: Full System Backup
 
+TODO: review process. Doesn't seem to be ideal. May want to consider the approach used by my Arch Router that uses `cp -a` (IIRC) to avoid redundant copies. FWIW, having ZFS snapshots and offsite backup of /tank/backup might make versioning unnecessary.
+
 Before making any changes, create a complete backup of the system to `/tank/backup`. This should become a regular automated process on the new system.
 
 ### Backup Contents
@@ -269,7 +273,7 @@ Before making any changes, create a complete backup of the system to `/tank/back
 
 ```bash
 # Create backup directory with timestamp
-BACKUP_DIR="/tank/backup/system-backup-$(date +%Y%m%d)"
+BACKUP_DIR="/tank/backup/hypervisor-system-backup-$(date +%Y%m%d)"
 mkdir -p "$BACKUP_DIR"
 
 # System configuration
@@ -324,8 +328,10 @@ lsblk
 ## Phase 4: Partitioning Strategy for 1TB Drive
 
 The 1TB drive needs to be partitioned optimally:
-- **OS partition**: 100-150GB for Arch Linux (plenty of room for growth)
-- **Remaining space**: ~850GB to be determined based on needs
+- **OS partition**: 250GB for Arch Linux (plenty of room for growth)
+  - This needs to be reviewed. Advice online has led me astray here in the past and it is very painful. My current system is using 108GB out of its allotted 185GB, suggesting >100GB is crucial.
+    - Some (most?) of the current system's use might be user data that could be moved to a HOME partition down the road, but it's best to keep simple, I think
+- **Remaining space**: ~750GB to be determined based on needs
   - Option 1: Additional ZFS pool for fast storage
   - Option 2: Extended temp/download space
   - Option 3: Swap partition (if needed)
@@ -334,8 +340,8 @@ The 1TB drive needs to be partitioned optimally:
 ### Partition Layout (to be finalized)
 
 ```
-/dev/sdX1: 150GB - Arch Linux OS (ext4 or btrfs)
-/dev/sdX2: 850GB - TBD (possibly new ZFS pool or extended temp space)
+/dev/sdX1: 250GB - Arch Linux OS (ext4 or btrfs)
+/dev/sdX2: 750GB - TBD (possibly new ZFS pool or extended temp space)
 ```
 
 ## Phase 5: Side-by-Side Arch Installation
@@ -402,7 +408,7 @@ Implement regular automated full system backups to `/tank/backup`.
 
 Create a script that:
 - Backs up `/etc/`, `/home/`, Docker volumes, VM configs
-- Uses timestamped directories
+- Uses timestamped directories - TODO: consider whether ZFS snapshots makes this unnecessary
 - Implements retention policy (e.g., keep last 4 weekly backups)
 - Logs backup status
 - Sends notifications on failure

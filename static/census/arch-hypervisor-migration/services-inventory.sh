@@ -33,7 +33,7 @@ OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-services-invento
     echo ""
     
     echo "--- Docker Directory Structure ---"
-    ls -laR /home/sean/docker/ 2>/dev/null || echo "Directory /home/sean/docker/ not found"
+    ls -laR $HOME/docker/ 2>/dev/null || echo "Directory $HOME/docker/ not found"
     echo ""
     
     echo "--- Cron Jobs (user) ---"
