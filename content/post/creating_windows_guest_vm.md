@@ -4,7 +4,7 @@ date: 2021-07-01
 description: ""
 summary: ""
 draft: false
-tags: []
+tags: ["kvm"]
 ---
 
 triggering uevents

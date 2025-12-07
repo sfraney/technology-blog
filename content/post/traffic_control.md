@@ -4,7 +4,7 @@ date: 2021-06-08
 description: "Shaping traffic through a router"
 summary: ""
 draft: false
-tags: []
+tags: ["router"]
 ---
 
 ## Sources

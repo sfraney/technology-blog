@@ -4,7 +4,7 @@ date: 2021-07-15
 description: ""
 summary: ""
 draft: false
-tags: []
+tags: ["server"]
 ---
 
 I wanted to hold off on the performance tuning until I got things functional and maybe got a feel for the performance characteristics so I wasn't messing with things that didn't matter.  It turns out that, while the Linux guest is running like a champ, the Windows guest is a little grumpy.  ~~It could be due to different usecases more than OSs, though; the specific scenario where Windows was acting up was during a Zoom call when a bunch of Chrome tabs were being restored (and there appears to be a virus issue on thing to boot...).~~

@@ -4,7 +4,7 @@ date: 2021-07-07
 description: ""
 summary: ""
 draft: false
-tags: []
+tags: ["server"]
 ---
 
 ## Misc. Questions (mostly ZFS)
