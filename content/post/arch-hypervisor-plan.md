@@ -130,6 +130,18 @@ sudo iptables -t nat -L -v -n
 ip route show
 ```
 
+**Key findings from census:**
+
+- **Physical interface**: `enp6s0` (bridged, not directly configured)
+- **Bridge**: `br0` bridges `enp6s0`, receives IP via DHCP (currently `172.16.0.202/24`)
+- **VM networking**: VMs use `br0` via `vnet0` and `vnet1` (not the default `virbr0` which is unused)
+  - This allows VMs to be on the same LAN as the host (not behind NAT), making them accessible from other machines on the network
+- **Configuration**: Netplan (`/etc/netplan/00-installer-config.yaml`) - manually modified to configure bridge
+- **Firewall**: UFW inactive (no firewall rules)
+- **Docker networks**: Many auto-created Docker bridge networks (not critical to document individually)
+
+**Note**: This configuration will need to be replicated on Arch Linux. The bridge setup is critical for VM networking to function correctly. Both the host and VMs use `br0`, allowing VMs to appear as regular devices on the LAN rather than being NAT'd behind the hypervisor.
+
 ### Services Inventory
 
 Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-services-inventory.txt`.
