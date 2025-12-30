@@ -1,8 +1,8 @@
 #!/bin/bash
 # Temp Pool Contents Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-temp-pool-contents.txt
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-temp-pool-contents.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-temp-pool-contents.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-temp-pool-contents.txt"
 
 {
     echo "=== Temp Pool Contents - $(date) ==="

@@ -1,9 +1,9 @@
 #!/bin/bash
 # System Configuration Census Script
 # Package list will be saved to: /tank/backup/ubuntu-packages.txt
-# Other output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-system-config.txt
+# Other output will be saved to: static/census/arch-hypervisor-migration/<date>-system-config.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-system-config.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-system-config.txt"
 PACKAGE_LIST="/tank/backup/ubuntu-packages.txt"
 
 mkdir -p "$(dirname "$PACKAGE_LIST")"

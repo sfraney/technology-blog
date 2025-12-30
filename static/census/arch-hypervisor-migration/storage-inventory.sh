@@ -1,8 +1,8 @@
 #!/bin/bash
 # Storage Inventory Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-storage-inventory.txt
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-storage-inventory.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-storage-inventory.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-storage-inventory.txt"
 
 {
     echo "=== Storage Inventory - $(date) ==="

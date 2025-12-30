@@ -1,8 +1,8 @@
 #!/bin/bash
 # Services Inventory Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-services-inventory.txt
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-services-inventory.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-services-inventory.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-services-inventory.txt"
 
 {
     echo "=== Services Inventory - $(date) ==="
@@ -33,7 +33,7 @@ OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-services-invento
     echo ""
     
     echo "--- Docker Directory Structure ---"
-    ls -laR $HOME/docker/ 2>/dev/null || echo "Directory $HOME/docker/ not found"
+    ls -laR /home/sean/docker/ 2>/dev/null || echo "Directory /home/sean/docker/ not found"
     echo ""
     
     echo "--- Cron Jobs (user) ---"

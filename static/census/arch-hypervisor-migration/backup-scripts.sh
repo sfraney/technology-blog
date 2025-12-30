@@ -1,8 +1,8 @@
 #!/bin/bash
 # Backup and Automation Scripts Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-backup-scripts.txt
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-backup-scripts.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-backup-scripts.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-backup-scripts.txt"
 
 {
     echo "=== Backup and Automation Scripts - $(date) ==="

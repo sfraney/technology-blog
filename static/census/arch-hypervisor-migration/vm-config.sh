@@ -1,9 +1,9 @@
 #!/bin/bash
 # VM Configuration Census Script
 # VM XML exports will be saved to: /tank/backup/vm-<vm-name>.xml
-# Other output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-vm-config.txt
+# Other output will be saved to: static/census/arch-hypervisor-migration/<date>-vm-config.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-vm-config.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-vm-config.txt"
 BACKUP_DIR="/tank/backup"
 
 mkdir -p "$BACKUP_DIR"

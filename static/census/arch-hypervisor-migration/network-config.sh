@@ -1,8 +1,8 @@
 #!/bin/bash
 # Network Configuration Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/2025-12-06-network-config.txt
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-network-config.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/2025-12-06-network-config.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-network-config.txt"
 
 {
     echo "=== Network Configuration - $(date) ==="
