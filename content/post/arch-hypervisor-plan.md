@@ -327,7 +327,51 @@ grep -r "zfs.*snap" /home/*/bin
 # AWS backup scripts
 grep -r "aws.*s3" /home
 grep -r "glacier" /home
+
+# Document known scripts (from Services Inventory)
+ls -laR /home/$USER/scripts/
+cat /home/$USER/scripts/archrouter_full_backup.sh
+cat /home/$USER/scripts/perl-zfs-auto-snap/zfs-auto-snap.pl | head -50
+cat /home/$USER/scripts/aws_backup/aws_backup.pl | head -50
+
+# Check script dependencies
+head -20 /home/$USER/scripts/perl-zfs-auto-snap/zfs-auto-snap.pl | grep -E "^use|^require"
+head -20 /home/$USER/scripts/aws_backup/aws_backup.pl | grep -E "^use|^require|import"
 ```
+
+**Key findings from census:**
+
+- **Scripts to migrate** (located in `/home/$USER/scripts/`):
+  - `archrouter_full_backup.sh` - Weekly router backup script (runs Mondays at 01:00 via cron)
+  - `perl-zfs-auto-snap/zfs-auto-snap.pl` - ZFS auto-snapshot script (runs every 15 minutes via cron)
+  - `aws_backup/aws_backup.pl` - AWS Glacier backup script (runs weekly Mondays at 18:00 via cron)
+
+- **Scripts NOT needed** (do not migrate):
+  - `start_home_assistant.sh` - HomeAssistant startup script (no longer needed)
+  - `shutdown_system_w_no_guests.sh` - System shutdown script (no longer needed)
+
+- **Automation method**: All scripts run via cron jobs (no systemd timers). See [Services Inventory](#services-inventory) section for full cron job details.
+
+- **Git repositories**: Both `aws_backup/` and `perl-zfs-auto-snap/` directories are git repositories - can be cloned/pulled rather than just copied during migration
+
+- **Perl dependencies** (specific modules required):
+  - `zfs-auto-snap.pl`: Requires `POSIX` and `DateTime` Perl modules
+  - `aws_backup.pl`: Dependencies not visible in first 20 lines (longer script), needs full review
+
+- **AWS backup configuration**:
+  - AWS S3 bucket: `<redacted>`
+  - Configuration files to migrate:
+    - `/home/$USER/backup/dataset_backup_passphrases` - Encryption passphrases for datasets
+    - `/home/$USER/backup/latest_backup_snaps` - Log file tracking backed up snapshots
+  - AWS CLI credentials and config files also need migration
+
+- **Router backup method**: Uses hard links (`cp -al`) for efficient storage of timestamped backups in `/tank/backup/archrouter.backup/`
+
+- **ZFS snapshot configuration**: `zfs-auto-snap.pl` manages snapshots for 9 datasets with retention policies (frequent: 4, hourly: 24, daily: 31, weekly: 8, monthly: 12). Excludes `tank/data/frigate` and `tank/media/downloads`.
+
+- **Script version note**: Use `aws_backup/aws_backup.pl` (Jan 2025, newer) rather than root-level `aws_backup.pl` (Jul 2021, older)
+
+- **Note**: All automation is user-level (not system-level), making migration straightforward. Scripts are located in `/home/$USER/scripts/` and can be copied directly (or cloned if git repos), but Perl module dependencies and AWS configuration must be verified on Arch.
 
 ### Temp Pool Contents
 
