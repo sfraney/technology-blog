@@ -17,31 +17,31 @@ The challenge is that this system hosts a lot and I don't want anything to slip 
 - **CPU**: Ryzen 9 5950x
 - **GPUs**: 1x NVIDIA 3070, 1x AMD XFX Radeon HD 6950 (for VM passthrough - mixed vendors to avoid GRUB blacklisting issues)
 - **NVMe drives**: 2x (both for VM passthrough - motherboard only supports 2)
-- **OS drive**: 372.6 GB (or possibly one of the 3x250GB drives - needs verification)
+- **OS drive**: 372.6 GB Hitachi HDT72504
 - **ZFS pools**: 
   - `tank`: 3x8TB RAIDZ
   - `temp`: 1TB (only 37GB used - candidate for Arch installation)
-- **SSDs**: 3x250GB (need to determine current use - possibly L2ARC/SLOG for tank pool, or download zpool)
+- **SSDs**: 3x250GB (need to determine current use - possibly [L2ARC/SLOG]({{< ref "zfs" >}}) for tank pool, or download zpool)
 
 ### Current Services
-- **Docker containers**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge
+- **Docker containers (ports)**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge (58846)
 - **Virtualization**: 2x KVM VMs with GPU passthrough ([Windows]({{< ref "creating_windows_guest_vm" >}}) + [Linux]({{< ref "creating_linux_guest_vm" >}}))
 - **Storage**: ZFS auto-snapshots, [AWS Glacier backups]({{< ref "offsite_backup" >}})
 - **Network**: Bridge networking, hostname: hypervisor.local
 
 ### Key Considerations
-- No CPU pinning or huge pages currently configured
+- No [CPU pinning or huge pages]({{< ref "perf_tuning_vms" >}}) currently configured
 - No regular full system backup (needs to be implemented)
 - IOMMU/VFIO configuration must be preserved (mixed GPU vendors avoid GRUB blacklisting issues)
 - All services must continue functioning
 
 ## Phase 1: System Census
 
-Before making any changes, I need a complete inventory of the current system. This will ensure nothing is missed during migration. All census output will be saved to `static/census/arch-hypervisor-migration/` in the blog repository for reference, with files named by date and category.
+Before making any changes, I need a complete inventory of the current system. This will help ensure nothing is missed during migration. All census output will be saved to `static/census/arch-hypervisor-migration/` in the blog repository for reference, with files named by date and category.
 
 ### Storage Inventory
 
-Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-storage-inventory.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-storage-inventory.txt`.
 
 ```bash
 # List all block devices
@@ -84,7 +84,7 @@ lsblk -f
 - **3x250GB SSDs** (`sda`, `sdc`, `sdd` - Samsung SSD 850/840, 238.5GB each):
   - Each drive has 3 partitions:
     - `part1`: 16G (Linux filesystem, not clearly identified)
-    - `part2`: 2G zfs_member labeled "tank" (not currently used as L2ARC/SLOG - tank pool only shows the 3x8TB drives)
+    - `part2`: 2G zfs_member labeled "tank" (not currently used as [L2ARC/SLOG]({{< ref "zfs" >}}) - tank pool only shows the 3x8TB drives)
     - `part3`: 220.5G zfs_member labeled "downloads"
   - The `part3` partitions form a striped "downloads" zpool (660G total, 621G used, 94% capacity)
   - **Not** used as L2ARC/SLOG for 'tank' pool
@@ -102,7 +102,7 @@ lsblk -f
 
 ### Network Configuration
 
-Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-network-config.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-network-config.txt`.
 
 ```bash
 # Network interfaces
@@ -144,7 +144,7 @@ ip route show
 
 ### Services Inventory
 
-Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-services-inventory.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-services-inventory.txt`.
 
 ```bash
 # Systemd services
@@ -169,7 +169,7 @@ cat /etc/crontab
 
 ### VM Configuration
 
-VM XML exports will be saved to `/tank/backup/vm-<vm-name>.xml`. Other VM configuration output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-vm-config.txt`.
+VM XML exports will be saved to `/tank/backup/vm-<vm-name>.xml`. Other VM configuration output will be saved to `static/census/arch-hypervisor-migration/<date>-vm-config.txt`.
 
 ```bash
 # List all VMs
@@ -197,7 +197,7 @@ lspci -nn | grep -E "(NVIDIA|AMD|Radeon)"
 
 ### System Configuration
 
-Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-system-config.txt`.
+Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/<date>-system-config.txt`.
 
 TODO: why are we limiting the `grub.cfg` output to 50 lines?
 
@@ -222,7 +222,7 @@ ls -la ~/.ssh/
 
 ### Backup and Automation Scripts
 
-Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-backup-scripts.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-backup-scripts.txt`.
 
 ```bash
 # Find backup scripts
@@ -242,7 +242,7 @@ grep -r "glacier" /home
 
 ### Temp Pool Contents
 
-Output will be saved to `static/census/arch-hypervisor-migration/2025-12-06-temp-pool-contents.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-temp-pool-contents.txt`.
 
 ```bash
 # What's in the temp pool?
