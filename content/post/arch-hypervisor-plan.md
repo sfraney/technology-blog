@@ -262,12 +262,10 @@ lspci -nn | grep -E "(NVIDIA|AMD|Radeon)"
 
 Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/<date>-system-config.txt`.
 
-TODO: why are we limiting the `grub.cfg` output to 50 lines?
-
 ```bash
 # Boot configuration
 cat /etc/default/grub
-cat /boot/grub/grub.cfg | head -50
+cat /boot/grub/grub.cfg
 
 # Installed packages
 dpkg --get-selections | grep -v deinstall > /tank/backup/ubuntu-packages.txt
@@ -282,6 +280,34 @@ cat ~/.ssh/config
 cat ~/.ssh/authorized_keys
 ls -la ~/.ssh/
 ```
+
+**Key findings from census:**
+
+- **GRUB VFIO configuration** (critical for Arch migration):
+  - Kernel parameters: `video=efifb:off amd_iommu=on iommu=pt vfio_pci.ids=10de:2484,10de:228b,10de:11c0,10de:0e0b,1002:6719,1002:aa80`
+  - NVIDIA GPU: `10de:2484` (VGA) + `10de:228b` (Audio) + additional devices `10de:11c0`, `10de:0e0b`
+  - AMD GPU: `1002:6719` (VGA) + `1002:aa80` (Audio)
+  - Boot settings: `GRUB_TIMEOUT=0` with `GRUB_TIMEOUT_STYLE=hidden` (immediate boot to default)
+
+- **Installed packages**: 980 packages total
+  - **Critical for migration**: Docker (`docker-ce`, `docker-compose-plugin`), virtualization (`qemu-kvm`, `libvirt-daemon`, `ovmf`), ZFS (`zfsutils-linux`), AWS CLI (`awscli`), network (`netplan.io`)
+  - No desktop environment packages (server/hypervisor setup confirmed)
+
+- **User accounts**: 
+  - `user1` (UID 1000) - primary user with sudo, libvirt, docker groups
+  - `user2` (UID 1001) - secondary user with libvirt, www-data, sambashare groups
+  - `deluge` (UID 1002) - service account for Deluge container
+
+- **SSH configuration**:
+  - Three authorized keys from multiple machines (Raspberry Pi and local user PCs)
+  - No SSH config file (using defaults)
+
+- **GRUB menu entries**:
+  - Current Ubuntu 20.04 entries (5.4.0-216-generic and 5.4.0-212-generic)
+  - Windows Boot Manager entry (dual-boot configuration)
+  - **Old Ubuntu 12.04.3 LTS entries** on `/dev/sdh1` (should be cleaned up after migration - matches old OS partition found in storage inventory)
+
+- **Note**: The `grub.cfg` file is very long (804+ lines) due to multiple kernel versions and old OS entries. The full file was captured in the census output for reference, but only the `/etc/default/grub` configuration is needed for Arch migration.
 
 ### Backup and Automation Scripts
 

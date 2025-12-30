@@ -6,7 +6,7 @@
 OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-system-config.txt"
 PACKAGE_LIST="/tank/backup/ubuntu-packages.txt"
 
-mkdir -p "$(dirname "$PACKAGE_LIST")"
+#mkdir -p "$(dirname "$PACKAGE_LIST")"
 
 {
     echo "=== System Configuration - $(date) ==="
@@ -16,8 +16,8 @@ mkdir -p "$(dirname "$PACKAGE_LIST")"
     cat /etc/default/grub
     echo ""
     
-    echo "--- GRUB Configuration (first 50 lines) ---"
-    cat /boot/grub/grub.cfg | head -50
+    echo "--- GRUB Configuration ---"
+    cat /boot/grub/grub.cfg
     echo ""
     
     echo "--- Installed Packages ---"
