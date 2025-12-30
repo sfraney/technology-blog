@@ -267,7 +267,6 @@ Before making any changes, create a complete backup of the system to `/tank/back
 - Package lists
 - Service configurations
 - SSH keys and authorized_keys
-- Any custom scripts
 
 ### Backup Process
 
@@ -292,9 +291,6 @@ cp /tank/backup/ubuntu-packages.txt "$BACKUP_DIR/"
 
 # VM XMLs (already exported in Phase 1)
 cp /tank/backup/vm-*.xml "$BACKUP_DIR/" 2>/dev/null || true
-
-# Custom scripts
-find /home -name "*.sh" -o -name "*.py" | xargs tar -czf "$BACKUP_DIR/scripts.tar.gz"
 
 # Verify backup
 ls -lh "$BACKUP_DIR"
@@ -402,13 +398,17 @@ Migrate services one at a time, testing each before moving to the next.
 
 ## Phase 7: Automated Full System Backup Setup
 
+
 Implement regular automated full system backups to `/tank/backup`.
 
 ### Backup Script
 
 Create a script that:
 - Backs up `/etc/`, `/home/`, Docker volumes, VM configs
-- Uses timestamped directories - TODO: consider whether ZFS snapshots makes this unnecessary
+  - Should be able to start from Phase 2 script above
+    - Don't just keep copying the ubuntu packages list. That is just to setup the new Arch Hypervisor with the necessary packages. For Arch Hypervisor backup, generate new list of installed packages in the running system.
+    - Likewise, regenerate VM XMLs at each backup. They can change and keeping the static version from before creation doesn't make sense.
+- Uses timestamped directories - TODO: consider whether ZFS snapshots makes this - and next step - unnecessary
 - Implements retention policy (e.g., keep last 4 weekly backups)
 - Logs backup status
 - Sends notifications on failure
