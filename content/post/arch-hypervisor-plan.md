@@ -24,10 +24,14 @@ The challenge is that this system hosts a lot and I don't want anything to slip 
 - **SSDs**: 3x250GB (need to determine current use - possibly [L2ARC/SLOG]({{< ref "zfs" >}}) for tank pool, or download zpool)
 
 ### Current Services
-- **Docker containers (ports)**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge (58846)
+- **Docker containers (ports)**: Jellyfin (8096), Sonarr (8989), Radarr (7878), HomeAssistant (8123), Deluge (58846), Nextcloud (w/ MariaDB), Unifi Controller
+  - Helper containers
+    - For HomeAssistant: Frigate, MQTT
+    - Prometheus, Grafana, node-exporter, cadvisor
 - **Virtualization**: 2x KVM VMs with GPU passthrough ([Windows]({{< ref "creating_windows_guest_vm" >}}) + [Linux]({{< ref "creating_linux_guest_vm" >}}))
 - **Storage**: ZFS auto-snapshots, [AWS Glacier backups]({{< ref "offsite_backup" >}})
 - **Network**: Bridge networking, hostname: hypervisor.local
+- **Router Backup**: Weekly backup of Arch router on Mondays at 01:00
 
 ### Key Considerations
 - No [CPU pinning or huge pages]({{< ref "perf_tuning_vms" >}}) currently configured
@@ -166,6 +170,40 @@ sudo crontab -l
 ls -la /etc/cron.*
 cat /etc/crontab
 ```
+
+**Key findings from census:**
+
+- **Docker containers (15 running)** - More services than originally documented (~~struckthrough~~ are not desired on the new system):
+  - **Media**: Jellyfin (8096), Sonarr (8989), Radarr (7878), Deluge (8112, 58846), ~~CouchPotato (5050)~~
+  - **Home automation**: HomeAssistant (8123), Frigate (8554-8555, 8971), MQTT broker (1883)
+  - **Cloud**: Nextcloud (443) with MariaDB
+  - **Monitoring**: Prometheus (9090), Grafana (3000), node-exporter (9100), cadvisor (8080)
+  - **Network**: Unifi Controller (multiple ports)
+  - **Note**: ZoneMinder referenced in cron jobs but not currently running
+
+- **Systemd services**: 32 running services including:
+  - `libvirtd` and `virtlogd` for virtualization
+  - `zfs-zed` for ZFS event handling
+  - `docker` and `containerd` for container runtime
+  - No systemd timers running (all automation via cron)
+
+- **Cron-based automation** (critical to migrate, except those ~~struckthrough~~):
+  - **ZFS auto-snapshots**: Every 15 minutes (`/home/$USER/scripts/perl-zfs-auto-snap/zfs-auto-snap.pl`)
+  - **AWS Glacier backups**: Weekly on Mondays at 18:00 (`/home/$USER/scripts/aws_backup/aws_backup.pl`)
+  - **ZFS scrub**: Weekly on Mondays at 00:00 (`zpool scrub tank`)
+  - **Router backup**: Weekly on Mondays at 01:00 (`/home/$USER/scripts/archrouter_full_backup.sh`)
+  - ~~**System shutdown**: Every 15 minutes Tue-Sat (`/home/$USER/scripts/shutdown_system_w_no_guests.sh`)~~
+  - ~~**Camera management**: ZoneMinder/HomeAssistant stop at 19:30, start at 7:30-7:31~~
+  - ~~**HomeAssistant startup**: On boot (`/home/$USER/scripts/start_home_assistant.sh`)~~
+
+- **Scripts to migrate** (located in `/home/$USER/scripts/`, ~~struckthrough~~ unnecessary):
+  - `archrouter_full_backup.sh`
+  - `perl-zfs-auto-snap/zfs-auto-snap.pl`
+  - `aws_backup/aws_backup.pl`
+  - ~~`start_home_assistant.sh`~~
+  - ~~`shutdown_system_w_no_guests.sh`~~
+
+- **Docker configuration**: All containers configured via docker-compose files in `/home/$USER/docker/` subdirectories
 
 ### VM Configuration
 
