@@ -375,7 +375,7 @@ head -20 /home/$USER/scripts/aws_backup/aws_backup.pl | grep -E "^use|^require|i
 
 ### Temp Pool Contents
 
-Output will be saved to `static/census/arch-hypervisor-migration/<date>-temp-pool-contents.txt`.
+Output will be saved to `static/census/arch-hypervisor-migration/<date>-temp-pool-info.txt`.
 
 ```bash
 # What's in the temp pool?

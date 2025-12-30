@@ -1,11 +1,11 @@
 #!/bin/bash
-# Temp Pool Contents Census Script
-# Output will be saved to: static/census/arch-hypervisor-migration/<date>-temp-pool-contents.txt
+# Temp Pool Info Census Script
+# Output will be saved to: static/census/arch-hypervisor-migration/<date>-temp-pool-info.txt
 
-OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-temp-pool-contents.txt"
+OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-temp-pool-info.txt"
 
 {
-    echo "=== Temp Pool Contents - $(date) ==="
+    echo "=== Temp Pool Info - $(date) ==="
     echo ""
     
     echo "--- ZFS List (temp pool) ---"
@@ -13,7 +13,7 @@ OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-temp-pool
     echo ""
     
     echo "--- Directory Sizes in /temp ---"
-    du -sh /temp/* 2>/dev/null || echo "No contents in /temp or pool not mounted"
+    du -sh /temp/* 2>/dev/null || echo "No info in /temp or pool not mounted"
     echo ""
     
     echo "--- Sample Files in /temp (first 20) ---"
@@ -24,5 +24,5 @@ OUTPUT_FILE="static/census/arch-hypervisor-migration/$(date +%Y-%m-%d)-temp-pool
     zfs get all temp
 } | tee "$OUTPUT_FILE"
 
-echo "Temp pool contents saved to: $OUTPUT_FILE"
+echo "Temp pool info saved to: $OUTPUT_FILE"
 
