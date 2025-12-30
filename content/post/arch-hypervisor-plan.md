@@ -233,6 +233,31 @@ lspci -nn | grep -i "3d\|display"
 lspci -nn | grep -E "(NVIDIA|AMD|Radeon)"
 ```
 
+**Key findings from census:**
+
+- **VMs**: 2 running (User1-PC, User2-PC), 5 shut off (CppDev, Manjaro.24.1.2, qcow-reader, Spare-PC-1, Spare-PC-2)
+
+- **GPU PCI IDs for VFIO configuration** (critical for Arch setup):
+  - **AMD Radeon HD 6950**: `1002:6719` (VGA) + `1002:aa80` (Audio) - IOMMU Group 23
+  - **NVIDIA 3070**: `10de:2484` (VGA) + `10de:228b` (Audio) - IOMMU Group 25
+  - Both GPUs are in isolated IOMMU groups with their audio devices (ideal for passthrough)
+
+- **NVMe drives for passthrough**:
+  - `01:00.0` - Sandisk NVMe (IOMMU Group 14) - passed to User1-PC
+  - `04:00.0` - Sandisk NVMe (IOMMU Group 22) - passed to User2-PC
+
+- **VM configuration differences**:
+  - **User1-PC**: 12GB RAM, 8 vCPUs, UTC clock, NVIDIA GPU, no KVM hidden state
+  - **User2-PC**: 16GB RAM, 8 vCPUs, localtime clock, AMD GPU, KVM hidden state enabled, CPU topology specified, `smep` disabled
+
+- **PCI devices passed through**:
+  - **User1-PC**: NVIDIA GPU + audio (0a:00.0, 0a:00.1), USB controller (0c:00.3), NVMe drive (01:00.0)
+  - **User2-PC**: AMD GPU + audio (05:00.0, 05:00.1), NVMe drive (04:00.0), USB controllers (07:00.1, 07:00.3), AMD HD Audio (0c:00.4)
+
+- **IOMMU groups**: Well-isolated - each GPU is in its own group with its audio device, which is ideal for passthrough
+
+- **Network**: Both VMs confirmed to use `br0` bridge (verified from VM XML exports)
+
 ### System Configuration
 
 Package list will be saved to `/tank/backup/ubuntu-packages.txt`. Other system configuration output will be saved to `static/census/arch-hypervisor-migration/<date>-system-config.txt`.
