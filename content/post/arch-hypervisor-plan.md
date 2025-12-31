@@ -39,7 +39,7 @@ The challenge is that this system hosts a lot and I don't want anything to slip 
 - IOMMU/VFIO configuration must be preserved (mixed GPU vendors avoid GRUB blacklisting issues)
 - All services must continue functioning
 
-## Phase 1: System Census
+## Phase 1: System Census - COMPLETE
 
 Before making any changes, I need a complete inventory of the current system. This will help ensure nothing is missed during migration. All census output will be saved to `static/census/arch-hypervisor-migration/` in the blog repository for reference, with files named by date and category.
 
@@ -385,7 +385,7 @@ find /temp -type f -exec ls -lh {} \; | head -20
 zfs get all temp
 ```
 
-## Phase 2: Full System Backup
+## Phase 2: Full System Backup - COMPLETE
 
 Before making any changes, create a complete backup of the system to `/tank/backup`. This should become a regular automated process on the new system (see [Phase 7](#phase-7-automated-full-system-backup-setup)).
 
@@ -421,7 +421,7 @@ ls -lh "$BACKUP_DIR"
 du -sh "$BACKUP_DIR"
 ```
 
-## Phase 3: Temp Pool Data Migration
+## Phase 3: Temp Pool Data Migration - COMPLETE
 
 Before repurposing the 1TB temp pool drive, migrate its contents.
 
