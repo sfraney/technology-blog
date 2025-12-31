@@ -387,19 +387,14 @@ zfs get all temp
 
 ## Phase 2: Full System Backup
 
-TODO: review process. Doesn't seem to be ideal. May want to consider the approach used by my Arch Router that uses `cp -a` (IIRC) to avoid redundant copies. FWIW, having ZFS snapshots and offsite backup of /tank/backup might make versioning unnecessary.
+Before making any changes, create a complete backup of the system to `/tank/backup`. This should become a regular automated process on the new system (see [Phase 7](#phase-7-automated-full-system-backup-setup)).
 
-Before making any changes, create a complete backup of the system to `/tank/backup`. This should become a regular automated process on the new system.
+### Backup Approach
 
-### Backup Contents
-
-- System configuration files (`/etc/`)
-- User home directories
-- Docker data volumes and configurations
-- VM XML definitions (already exported in Phase 1)
-- Package lists
-- Service configurations
-- SSH keys and authorized_keys
+Back up the entire system using `rsync` (similar to the Arch Router backup approach). This is simpler and more comprehensive than selective backups. The only exceptions are:
+- Virtual filesystems that don't need backup (`/proc`, `/sys`, `/dev`, `/tmp`, `/run`)
+- Running system state information (Docker container/images lists) - captured separately while system is running
+- Phase 1 census outputs (VM XMLs, package lists) - copied into backup for convenience
 
 ### Backup Process
 
@@ -408,25 +403,22 @@ Before making any changes, create a complete backup of the system to `/tank/back
 BACKUP_DIR="/tank/backup/hypervisor-system-backup-$(date +%Y%m%d)"
 mkdir -p "$BACKUP_DIR"
 
-# System configuration
-sudo tar -czf "$BACKUP_DIR/etc-backup.tar.gz" /etc/
+# Full system backup (exclude virtual filesystems and mounted ZFS pools)
+sudo rsync -aAXHv --delete \
+  --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/tank/*","/temp/*","/downloads/*"} \
+  / "$BACKUP_DIR/" |& tee "$BACKUP_DIR/rsync.log"
 
-# Home directories
-sudo tar -czf "$BACKUP_DIR/home-backup.tar.gz" /home/
-
-# Docker volumes and configs
+# Capture running system state (requires running system)
 docker ps -a --format "{{.Names}}" > "$BACKUP_DIR/docker-containers.txt"
 docker images > "$BACKUP_DIR/docker-images.txt"
-sudo tar -czf "$BACKUP_DIR/docker-volumes.tar.gz" /var/lib/docker/volumes/
 
-# Package list (already done in Phase 1, but verify)
-cp /tank/backup/ubuntu-packages.txt "$BACKUP_DIR/"
-
-# VM XMLs (already exported in Phase 1)
+# Copy Phase 1 outputs for convenience (already in /tank/backup)
+cp /tank/backup/ubuntu-packages.txt "$BACKUP_DIR/" 2>/dev/null || true
 cp /tank/backup/vm-*.xml "$BACKUP_DIR/" 2>/dev/null || true
 
 # Verify backup
 ls -lh "$BACKUP_DIR"
+du -sh "$BACKUP_DIR"
 ```
 
 ## Phase 3: Temp Pool Data Migration
