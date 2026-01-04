@@ -1,0 +1,18 @@
+{{ define "main" }}
+
+<h1>{{ .Title }}</h1>
+{{ partial "date-and-tags.html" . }}
+<br><br>
+
+{{ if .Params.toc }}
+    {{ if .TableOfContents }}
+    <div class="toc">
+        {{ .TableOfContents }}
+    </div>
+    <br>
+    {{ end }}
+{{ end }}
+
+{{ .Content }}
+
+{{ end }}
