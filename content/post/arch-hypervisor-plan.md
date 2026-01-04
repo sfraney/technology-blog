@@ -451,7 +451,7 @@ lsblk
 The 1TB drive needs to be partitioned optimally:
 - **OS partition**: 250GB for Arch Linux (plenty of room for growth)
   - This needs to be reviewed. Advice online has led me astray here in the past and it is very painful. My current system is using 108GB out of its allotted 185GB, suggesting >100GB is crucial.
-    - Some (most?) of the current system's use might be user data that could be moved to a HOME partition down the road, but it's best to keep simple, I think
+    - 64GB of the current system's use is in /home could be moved to a HOME partition down the road, but it's best to keep simple, I think
 - **Remaining space**: ~750GB to be determined based on needs
   - Option 1: Additional ZFS pool for fast storage
   - Option 2: Extended temp/download space
@@ -490,14 +490,6 @@ Install Arch Linux on the 1TB drive while keeping Ubuntu 20.04 fully functional.
 
 Migrate services one at a time, testing each before moving to the next.
 
-### Docker and Containers
-
-- Install Docker on Arch
-- Restore Docker volumes from backup
-- Configure containers (Jellyfin, Sonarr, Radarr, HomeAssistant, Deluge)
-- Test each service
-- Verify port mappings and network access
-
 ### Virtualization Setup
 
 - Install KVM/QEMU/libvirt packages
@@ -507,6 +499,14 @@ Migrate services one at a time, testing each before moving to the next.
 - Test GPU passthrough on both VMs
 - Verify VM networking and performance
 - **Note**: No CPU pinning or huge pages unless performance testing shows they're needed
+
+### Docker and Containers
+
+- Install Docker on Arch
+- Restore Docker volumes from backup
+- Configure containers (Jellyfin, Sonarr, Radarr, HomeAssistant, Deluge)
+- Test each service
+- Verify port mappings and network access
 
 ### ZFS Automation
 
