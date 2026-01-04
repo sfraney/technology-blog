@@ -7,6 +7,11 @@ draft: false
 tags: ["arch linux", "zfs", "server", "kvm"]
 ---
 
+<!-- Table of Contents -->
+<div class="toc">
+{{ .TableOfContents }}
+</div>
+
 It has been 4 1/2 years since I first setup my 2-desktops-in-1 hybrid hypervisor/home-server system. I used the most recent Ubuntu LTS at the time - 20.04 - and it is now no longer supported. This has taught me that I need something that can last longer than LTS provides and I have become more comfortable with Arch Linux in the last 4+ years, so I'm going to update to an Arch Linux system.
 
 The challenge is that this system hosts a lot and I don't want anything to slip through the cracks. My strategy is to use the existing 1TB 'temp' ZFS pool drive (which only has 37GB used) for a side-by-side Arch installation, allowing me to develop the new system while the old one is still available in a dual boot configuration.
