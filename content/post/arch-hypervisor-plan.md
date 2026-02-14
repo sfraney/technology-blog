@@ -466,7 +466,7 @@ The 1TB drive needs to be partitioned optimally:
 /dev/sdX2: 750GB - TBD (possibly new ZFS pool or extended temp space)
 ```
 
-## Phase 5: Side-by-Side Arch Installation
+## Phase 5: Side-by-Side Arch Installation - COMPLETE
 
 Install Arch Linux on the 1TB drive while keeping Ubuntu 20.04 fully functional.
 
@@ -486,6 +486,17 @@ Install Arch Linux on the 1TB drive while keeping Ubuntu 20.04 fully functional.
 - Create user accounts
 - Configure SSH access
 - Import existing ZFS pools (read-only initially for safety)
+
+## Status
+
+- Arch Linux base system installed on the second disk, with root filesystem and EFI partition correctly mounted.
+- Networking configured using NetworkManager and enabled to start at boot.
+- Admin user created; root login disabled for security.
+- SSH installed and enabled for remote access.
+- ZFS support installed via `zfs-dkms`; kernel module loaded and systemd services (`zfs-import-cache`, `zfs-mount`, `zfs.target`) enabled for automatic pool management.
+
+> At this point, the system is fully bootable and network-accessible. ZFS pools can now be imported.
+
 
 ## Phase 6: Service Migration
 
