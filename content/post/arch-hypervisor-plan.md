@@ -502,7 +502,7 @@ Install Arch Linux on the 1TB drive while keeping Ubuntu 20.04 fully functional.
 
 Migrate services one at a time, testing each before moving to the next.
 
-### Virtualization Setup
+### Virtualization Setup - COMPLETE
 
 - Install KVM/QEMU/libvirt packages
 - Configure IOMMU/VFIO (same kernel parameters as Ubuntu)
@@ -512,7 +512,7 @@ Migrate services one at a time, testing each before moving to the next.
 - Verify VM networking and performance
 - **Note**: No CPU pinning or huge pages unless performance testing shows they're needed
 
-### Docker and Containers
+### Docker and Containers - COMPLETE
 
 - Install Docker on Arch
 - Restore Docker volumes from backup
@@ -520,7 +520,7 @@ Migrate services one at a time, testing each before moving to the next.
 - Test each service
 - Verify port mappings and network access
 
-### ZFS Automation
+### ZFS Automation - COMPLETE
 
 - Set up ZFS auto-snapshots (systemd timer or cron)
 - Configure weekly scrubs
@@ -532,6 +532,10 @@ Migrate services one at a time, testing each before moving to the next.
 - Restore backup scripts
 - Test backup process
 - Verify encryption and Glacier transition
+
+### Restore router backup script
+
+- Current system executes script to perform weekly backup (`00 1 * * 1`) of my Arch router.
 
 ## Phase 7: Automated Full System Backup Setup
 
