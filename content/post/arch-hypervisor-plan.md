@@ -522,7 +522,7 @@ Migrate services one at a time, testing each before moving to the next.
 
 ### ZFS Automation - COMPLETE
 
-- Set up ZFS auto-snapshots (systemd timer or cron)
+- Set up ZFS auto-snapshots via systemd timer
 - Configure weekly scrubs
 - Verify snapshot retention policies
 
@@ -533,7 +533,7 @@ Migrate services one at a time, testing each before moving to the next.
 - Test backup process
 - Verify encryption and Glacier transition
 
-### Restore router backup script
+### Restore router backup script - COMPLETE
 
 - Current system executes script to perform weekly backup (`00 1 * * 1`) of my Arch router.
 
