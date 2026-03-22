@@ -526,7 +526,7 @@ Migrate services one at a time, testing each before moving to the next.
 - Configure weekly scrubs
 - Verify snapshot retention policies
 
-### AWS Glacier Backups
+### AWS Glacier Backups - COMPLETE
 
 - Install aws-cli
 - Restore backup scripts
